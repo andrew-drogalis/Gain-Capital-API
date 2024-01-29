@@ -3,6 +3,7 @@
 #include <json.hpp>
 #include <cpr/cpr.h>
 #include <boost/log/trivial.hpp>
+#include <algorithm>
 #include <iostream>
 #include <exception>
 #include <string>
@@ -217,15 +218,46 @@ std::map<std::string, nlohmann::json> GCapiClient::get_market_info(std::vector<s
 }
 
 std::map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> market_name_list, int num_ticks=1, long unsigned int from_ts=0, long unsigned int to_ts=0, std::string price_type="MID") {
-	std::map<std::string, nlohmann::json> response_map = {};
+	// Get prices
+    // :param market_name_list: market name (e.g. USD/CAD)
+	// :param num_ticks: number of price ticks/data to retrieve
+	// :param from_ts: from timestamp UTC
+    // :param to_ts: to timestamp UTC
+    // :return: price data    
+    std::map<std::string, nlohmann::json> response_map = {};
+
+    if (market_id_map.empty()) {
+        get_market_ids(market_name_list);
+    }
+
+    std::transform(price_type.begin(), price_type.end(), price_type.begin(), ::toupper);
 	
     for (int x = 0; x < market_name_list.size(); x++) {
         std::string market_name = market_name_list[x];
-        std::string market_id = std::to_string(market_id_map[market_name]);
+        std::string market_id;
+        try {
+            market_id = std::to_string(market_id_map[market_name]);
+        }
+        catch ( ... ) { 
+            get_market_ids({market_name}); 
+            market_id = std::to_string(market_id_map[market_name]);
+        }
 
         // ---------------------------
-        // r = self.session.get(self.rest_url + f'/market/{market_id}/tickhistory?PriceTicks=1&priceType=MID')
-        cpr::Url url = cpr::Url{rest_url + "/market/" + market_id + "/barhistory?interval=MINUTE&span=" + std::to_string(update_interval) + "&PriceBars=" + std::to_string(data_points_required)};
+        cpr::Url url;
+
+        if (from_ts != 0 && to_ts != 0) {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybetween?fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
+        }
+        else if (to_ts != 0) {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybefore?maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
+        }
+        else if (from_ts != 0) {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistoryafter?maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts) + "&priceType=" + price_type};
+        }
+        else {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type};
+        }
         
         for (int j = 0; j < 3; j++) {
             try {
@@ -235,13 +267,13 @@ std::map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::s
 
                 nlohmann::json resp = nlohmann::json::parse(r.text);
 
-                response_map[market_name] = resp["PriceBars"]; 
+                response_map[market_name] = resp["PriceTicks"]; 
                 break;
             }
             catch (cpr::Response r) { 
                 response_map[market_name] = {"Error"};
-                std::cout << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
-                BOOST_LOG_TRIVIAL(error) << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
+                std::cout << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
+                BOOST_LOG_TRIVIAL(error) << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
             }
             catch (...) {
                 if (j == 2) { 
@@ -258,14 +290,68 @@ std::map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::s
 }
 
 std::map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, int num_ticks=1, std::string interval, int span=1, long unsigned int from_ts=0, long unsigned int to_ts=0) {
+    // Get the open, high, low, close of a specific market_id
+	// :param market_name_list: market name (e.g. USD/CAD)
+	// :param num_ticks: number of price ticks/data to retrieve
+	// :param interval: MINUTE, HOUR or DAY tick interval
+	// :param span: it can be a combination of span with interval, 1Hour, 15 MINUTE
+	// :param from_ts: from timestamp UTC
+	// :param to_ts: to timestamp UTC
+	// :return: ohlc dataframe
     std::map<std::string, nlohmann::json> response_map = {};
+
+    if (market_id_map.empty()) {
+        get_market_ids(market_name_list);
+    }
+
+    std::vector<int> SPAN_M = {1, 2, 3, 5, 10, 15, 30}; // Span intervals for minutes
+    std::vector<int> SPAN_H = {1, 2, 4, 8}; // Span intervals for hours
+    std::vector<std::string> INTERVAL = {"HOUR", "MINUTE", "DAY", "WEEK", "MONTH"};
+
+    if (std::find(INTERVAL.begin(), INTERVAL.end(), interval) == INTERVAL.end()) {
+        std::cerr << "Interval Error - Provide one of the following intervals: 'HOUR', 'MINUTE', 'DAY', 'WEEK', 'MONTH'" << std::endl;
+        std::terminate();
+    }
+
+    if (interval == "HOUR") {
+        if (std::find(SPAN_H.begin(), SPAN_H.end(), span) == SPAN_H.end()) {
+            std::cerr << "Span Hour Error - Provide one of the following spans: 1, 2, 4, 8" << std::endl;
+            std::terminate();
+        }
+    }
+    else if (interval == "MINUTE") {
+        if (std::find(SPAN_M.begin(), SPAN_M.end(), span) == SPAN_M.end()) {
+            std::cerr << "Span Minute Error - Provide one of the following spans: 1, 2, 3, 5, 10, 15, 30" << std::endl;
+            std::terminate();
+        }
+    } else { span = 1; }
 
     for (int x = 0; x < market_name_list.size(); x++) {
         std::string market_name = market_name_list[x];
-        std::string market_id = std::to_string(market_id_map[market_name]);
+        std::string market_id;
+        try {
+            market_id = std::to_string(market_id_map[market_name]);
+        }
+        catch ( ... ) { 
+            get_market_ids({market_name}); 
+            market_id = std::to_string(market_id_map[market_name]);
+        }
 
         // ---------------------------
-        cpr::Url url = cpr::Url{rest_url + "/market/" + market_id + "/barhistory?interval=MINUTE&span=" + std::to_string(update_interval) + "&PriceBars=" + std::to_string(data_points_required)};
+        cpr::Url url; 
+
+        if (from_ts != 0 && to_ts != 0) {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybetween?interval=" + interval + "&span=" + std::to_string(span) + "&fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts)};
+        }
+        else if (to_ts != 0) {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybefore?interval=" + interval + "&span=" + std::to_string(span) + "&maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts)};
+        }
+        else if (from_ts != 0) {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistoryafter?interval=" + interval + "&span=" + std::to_string(span) + "&maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts)};
+        }
+        else {
+            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistory?interval=" + interval + "&span=" + std::to_string(span) + "&PriceBars=" + std::to_string(num_ticks)};
+        }
         
         for (int j = 0; j < 3; j++) {
             try {
@@ -297,11 +383,16 @@ std::map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::str
     return response_map;
 }
 
-std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_map, std::vector<std::string> keys_list, std::string tr_account_id="") {
-
-
-   
+std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_map, std::vector<std::string> market_name_list, std::string tr_account_id="") {
+    // Makes a new trade market order
+    // :param trade_map: JSON object formated as in the example below
+	// :param market_name_list: market name (e.g. USD/CAD)
+	// :param trading_acc_id: trading account ID
+	// :return: error_list: list of symbol name that failed ot place trade
+    // TRADE_MAP = {{"MARKET_NAME",{{"Direction","buy/sell"},{"Quantity","1000"}}}}   
     std::vector<std::string> error_list = {};
+
+    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
 
     int offset_seconds = 10;
     unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den + offset_seconds;
@@ -309,33 +400,40 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
 
     cpr::Url url = cpr::Url{rest_url + "/order/newtradeorder"};
 
-    while (!keys_list.empty() && current_time <= stop_time) {
+    if (market_id_map.empty()) {
+        get_market_ids(market_name_list);
+    }
+
+    while (!market_name_list.empty() && current_time <= stop_time) {
         // -----------------------
         error_list = {};
         sleep(0.5);
 
-        for (int x = 0; x < keys_list.size(); x++) {
-            std::string market_name = keys_list[x];
-            int quantity = ;
-            std::string direction = trade_map[market_name]["Direction"];
-            int market_id = market_id_map[market_name];
+        for (int x = 0; x < market_name_list.size(); x++) {
+            std::string market_name = market_name_list[x];
+            std::string market_id;
+            try {
+                market_id = std::to_string(market_id_map[market_name]);
+            }
+            catch ( ... ) { 
+                get_market_ids({market_name}); 
+                market_id = std::to_string(market_id_map[market_name]);
+            }
 
-            market_dict = current_prices[str(market_id)];
-            audit_id = market_dict[0];
-            bid_price = market_dict[1];
-            offer_price = market_dict[2];
+            float bid_price = get_prices({market_name},1,0,0,"BID")[0];
+            float offer_price = get_prices({market_name},1,0,0,"ASK")[0];
             // ---------------------------
 
             try {
                 nlohmann::json trade_payload = {
-                    {"Direction", direction},
-                    {"AuditId", audit_id},
+                    {"Direction", trade_map[market_name]["Direction"]},
+                    // {"AuditId", audit_id},
                     {"MarketId", market_id},
                     {"Quantity", trade_map[market_name]["Quantity"]},
                     {"MarketName", market_name},
-                    {"TradingAccountId", trading_account_id},
-                    {"OfferPrice", offer_price},
-                    {"BidPrice", bid_price},
+                    {"TradingAccountId", tr_account_id},
+                    {"OfferPrice", std::to_string(offer_price)},
+                    {"BidPrice", std::to_string(bid_price)},
                     {"PriceTolerance", "0"}
                 };                
             
@@ -345,7 +443,7 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
 
                     nlohmann::json resp = nlohmann::json::parse(r.text);
 
-                    BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << direction << " " << resp;
+                    BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
                     // ---------------------------
                     if (resp["OrderId"] == "0") { 
                         error_list.push_back(market_name);
@@ -356,19 +454,29 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
                      BOOST_LOG_TRIVIAL(debug) << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text;
                 }
             }
-            catch (...) { }
+            catch (...) { 
+                std::cout << "Error Placing Order for " << market_name << std::endl;
+                BOOST_LOG_TRIVIAL(error) << "Error Placing Order for " << market_name;
+            }
         }
         // -----------------------
-        keys_list = error_list;
+        market_name_list = error_list;
         current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
     }
     // -------------------
     return error_list;
 }
 
-std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map, std::vector<std::string> keys_list, std::string tr_account_id="") {
+std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map, std::vector<std::string> market_name_list, std::string tr_account_id="") {
     // Makes a new trade limit order
+    // :param trade_map: JSON object formated as in the example below
+	// :param market_name_list: market name (e.g. USD/CAD)
+	// :param trading_acc_id: trading account ID
+	// :return: error_list: list of symbol name that failed ot place trade
+    // TRADE_MAP = {{"MARKET_NAME",{{"Direction","buy/sell"},{"Quantity","1000"},{}}}}
     std::vector<std::string> error_list = {};
+
+    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
 
     int offset_seconds = 10;
     unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den + offset_seconds;
@@ -376,33 +484,40 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
 
     cpr::Url url = cpr::Url{rest_url + "/order/newstoplimitorder"};
 
-    while (!keys_list.empty() && current_time <= stop_time) {
+    if (market_id_map.empty()) {
+        get_market_ids(market_name_list);
+    }
+
+    while (!market_name_list.empty() && current_time <= stop_time) {
         // -----------------------
         error_list = {};
         sleep(0.5);
 
-        for (int x = 0; x < keys_list.size(); x++) {
-            std::string market_name = keys_list[x];
-            int quantity = ;
-            std::string direction = trade_map[market_name]["Direction"];
-            int market_id = market_id_map[market_name];
+        for (int x = 0; x < market_name_list.size(); x++) {
+            std::string market_name = market_name_list[x];
+            std::string market_id;
+            try {
+                market_id = std::to_string(market_id_map[market_name]);
+            }
+            catch ( ... ) { 
+                get_market_ids({market_name}); 
+                market_id = std::to_string(market_id_map[market_name]);
+            }
 
-            market_dict = current_prices[str(market_id)];
-            audit_id = market_dict[0];
-            bid_price = market_dict[1];
-            offer_price = market_dict[2];
+            float bid_price = get_prices({market_name},1,0,0,"BID")[0];
+            float offer_price = get_prices({market_name},1,0,0,"ASK")[0];
             // ---------------------------
 
             try {
                 nlohmann::json trade_payload = {
-                    {"Direction", direction},
-                    {"AuditId", audit_id},
+                    {"Direction", trade_map[market_name]["Direction"]},
+                    // {"AuditId", audit_id},
                     {"MarketId", market_id},
                     {"Quantity", trade_map[market_name]["Quantity"]},
                     {"MarketName", market_name},
-                    {"TradingAccountId", trading_account_id},
-                    {"OfferPrice", offer_price},
-                    {"BidPrice", bid_price},
+                    {"TradingAccountId", tr_account_id},
+                    {"OfferPrice", std::to_string(offer_price)},
+                    {"BidPrice", std::to_string(bid_price)},
                     {"PriceTolerance", "0"}
                 };                
             
@@ -412,7 +527,7 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
 
                     nlohmann::json resp = nlohmann::json::parse(r.text);
 
-                    BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << direction << " " << resp;
+                    BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
                     // ---------------------------
                     if (resp["OrderId"] == "0") { 
                         error_list.push_back(market_name);
@@ -423,10 +538,13 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
                      BOOST_LOG_TRIVIAL(debug) << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text;
                 }
             }
-            catch (...) { }
+            catch (...) { 
+                std::cout << "Error Placing Order for " << market_name << std::endl;
+                BOOST_LOG_TRIVIAL(error) << "Error Placing Order for " << market_name;
+            }
         }
         // -----------------------
-        keys_list = error_list;
+        market_name_list = error_list;
         current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
     }
     // -------------------
@@ -435,6 +553,7 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
 
 nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id = "") {
     // List of Open Positons in Trading Account
+    // :param trading_acc_id: trading account ID
     // :return JSON response
     nlohmann::json resp;
     if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
@@ -470,6 +589,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id = "") 
 
 nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id = "") {
     // List of Active Order in Trading Account
+    // :param trading_acc_id: trading account ID
     // :return JSON response
     nlohmann::json resp;
     if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
@@ -507,6 +627,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id = "") {
 nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_account_id="") {
     // Cancels an Active Order
     // :order_id: Order ID of the Order to Cancel
+    // :param trading_acc_id: trading account ID
     // :return JSON response
     nlohmann::json resp;
     if (tr_account_id.empty()) { tr_account_id = trading_account_id; }

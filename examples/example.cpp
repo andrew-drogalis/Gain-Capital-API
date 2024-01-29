@@ -12,7 +12,7 @@ int main () {
     string api_key = "BLANK";
 
     // List of Currencies to Trade
-    vector<string> currency_pairs = {"USD/CHF", 'EUR/USD', "GBP/USD"};
+    vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
 
     // Initalize GCapiClient
     GCapiClient gc_api = GCapiClient(username, password, api_key);
