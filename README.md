@@ -23,11 +23,7 @@ This library is dependent upon the API from Gain Capital's Forex.com. To make an
 
 ### Downloading Dependencies
 
-<b>This repository has been designed for use with Linux Systems.</b> 
-
-The libraries must be re-built from source to target another platform. Please see a link to required dependencies [below](#Dependencies). 
-
-Boost can be installed on Linux with the following commands. 
+Please see a link to required dependencies [below](#Dependencies). If you are in Linux, Boost can be installed with the following commands below. Since this repository has been built and test on a Linux system, please open up an issue if there are any conflicts with Windows or Mac OS.
 
 ```
     Fedora:
@@ -39,8 +35,6 @@ Boost can be installed on Linux with the following commands.
 ```
 
 ### Initializing API
-
-To get started, include the the header file in your project and pass the username, password, and apikey parameters to the GCapiClient.
 
 ```c
     #include <gain_capital_api.h>
@@ -136,7 +130,7 @@ To build the shared library and header files, run the commands below.
 
 ## Lightstreamer
 
-Live data streaming is provided by the Lightstreamer client, currently this feature is not integrated into this repository. In the future, I hope to incorporate this feature, but please see the C++ Lightstreamer repo provided below. This will be the jumping off point for integration into this repository.
+Live data streaming is provided by the Lightstreamer client, currently this feature is not integrated into this repository. In the future, I hope to incorporate this feature, but please see the C++ Lightstreamer repository provided below. This will be the jumping off point for integration into this repository.
 
 - [Lightstreamer for C++](https://github.com/AndrewCarterUK/LightstreamerCpp)
 
