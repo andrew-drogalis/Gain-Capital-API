@@ -5,6 +5,7 @@
 
 * [Instructions](#Instructions)
     - [Downloading Dependencies](#Downloading-Dependencies)
+    - [Initializing API](#Initializing-API)
     - [Account & Margin Information](#Account-&-Margin-Information)
     - [Market IDs & Information](#Market-IDs-&-Information)
     - [Fetching OHLC Data](#Fetching-OHLC-Data)
@@ -36,39 +37,83 @@ Boost can be installed on Linux with the following commands.
         pacman -Ss boost
 ```
 
+### Initializing API
+
+To get started, include the
+
+```c
+    #include <gain_capital_api.h>
+
+    string username = "Username";
+    string password = "Password";
+    string apikey = "ApiKey";
+
+    // List of Currencies to Trade
+    vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
+
+    // Initalize GCapiClient
+    GCapiClient gc_api = GCapiClient(username, password, apikey);
+```
+
 ### Account & Margin Information
 
-```cpp
+```c
+    // Get Account Information
+    nlohmann::json account_response = gc_api.get_account_info();
 
+    // Get Margin Information
+    nlohmann::json margin_response = gc_api.get_margin_info();
 
 ```
 
 ### Market IDs & Information
 
-```cpp
-
-
+```c
+    // Get Market IDs
+    // Sets Class Map with Market IDs
+    std::map<std::string, int> market_ids_response = gc_api.get_market_ids(currency_pairs);
 ```
 
 ### Fetching OHLC Data
 
-```cpp
-
-
+```c
+    // Get OHLC Bars
+    string interval = "MINUTE";
+    int num_ticks = 10;
+    std::map<std::string, nlohmann::json> ohlc_response = gc_api.get_ohlc(currency_pairs, interval, num_ticks);
 ```
 
 ### Placing Trades
 
-```cpp
-
+```c
+    // Place Market Order
+    nlohmann::json trades_map_market = {};
+    for (string symbol : currency_pairs) {
+        trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}};
+    }
     
+    std::vector<std::string> market_order_response = gc_api.trade_market_order(trades_map_market, currency_pairs);
+
+    // Place Limit Order
+    nlohmann::json trades_map_limit = {};
+    for (string symbol : currency_pairs) {
+        float mid_price = price_response[symbol][0]["Price"];
+        float trigger_price = mid_price * 1.1;
+        float stop_price = mid_price * 0.9;
+
+        trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
+    }
+
+    std::vector<std::string> limit_order_response = gc_api.trade_limit_order(trades_map_limit, currency_pairs);
 ```
 
 ### Monitoring Trades
 
-```cpp
+```c
+    // Order Management
+    nlohmann::json active_order_response = gc_api.list_active_orders();
 
-
+    nlohmann::json open_position_response = gc_api.list_open_positions();
 ```
 
 ## Dependencies
@@ -79,7 +124,9 @@ Boost can be installed on Linux with the following commands.
 
 ## Lightstreamer
 
+Live data streaming is provided by the Lightstreamer client, currently this feature is not integrated into this repository. In the future, I hope to incorporate this feature, but please see the C++ Lightstreamer repo provided below. This will be the jumping off point for integration into this repository.
 
+- [Lightstreamer for C++](https://github.com/AndrewCarterUK/LightstreamerCpp)
 
 ## License
 
