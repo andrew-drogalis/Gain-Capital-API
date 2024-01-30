@@ -11,6 +11,7 @@
     - [Fetching OHLC Data](#Fetching-OHLC-Data)
     - [Placing Trades](#Placing-Trades)
     - [Monitoring Trades](#Monitoring-Trades)
+* [Installing](#Installing)
 * [Dependencies](#Dependencies)
 * [Lightstreamer](#Lightstreamer)
 * [License](#License)
@@ -39,7 +40,7 @@ Boost can be installed on Linux with the following commands.
 
 ### Initializing API
 
-To get started, include the
+To get started, include the the header file in your project and pass the username, password, and apikey parameters to the GCapiClient.
 
 ```c
     #include <gain_capital_api.h>
@@ -114,6 +115,17 @@ To get started, include the
     nlohmann::json active_order_response = gc_api.list_active_orders();
 
     nlohmann::json open_position_response = gc_api.list_open_positions();
+```
+
+## Installing
+
+To build the shared library and header files, run the commands below.
+
+```
+    $ mkdir gcapi_library
+    $ cmake -S . -B gcapi_library
+    $ cmake --build gcapi_library --target gain_capital_api
+    $ cmake install gcapi_library
 ```
 
 ## Dependencies

@@ -34,12 +34,13 @@ install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
+        
+# Build Example Executable
+add_executable(Example examples/example.cpp
+                src/gain_capital_api.cpp)
 
-# add_executable(Example examples/example.cpp
-#                 src/gain_capital_api.cpp)
+target_include_directories(Example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-# target_include_directories(Example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(Example PRIVATE cpr::cpr)
 
-# target_link_libraries(Example PRIVATE cpr::cpr)
-
-# target_link_libraries(Example LINK_PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(Example LINK_PUBLIC ${Boost_LIBRARIES})
