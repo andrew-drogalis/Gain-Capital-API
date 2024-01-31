@@ -18,6 +18,8 @@ class GCapiClient {
         std::string client_account_id = "";
         std::map<std::string, int> market_id_map;
 
+        GCapiClient();
+
         GCapiClient(std::string username, std::string password, std::string appkey);
 
         nlohmann::json get_account_info(std::string param = "");
@@ -32,9 +34,9 @@ class GCapiClient {
 
         std::map<std::string, nlohmann::json> get_ohlc(std::vector<std::string> market_name_list, std::string interval, int num_ticks = 1, int span = 1, long unsigned int from_ts = 0, long unsigned int to_ts = 0);
 
-        std::vector<std::string> trade_market_order(nlohmann::json trade_map, std::vector<std::string> market_name_list, std::string tr_account_id = "");
+        std::vector<std::string> trade_market_order(nlohmann::json trade_map, std::string tr_account_id = "");
 
-        std::vector<std::string> trade_limit_order(nlohmann::json trade_map, std::vector<std::string> market_name_list, std::string tr_account_id = "");
+        std::vector<std::string> trade_limit_order(nlohmann::json trade_map, std::string tr_account_id = "");
 
         nlohmann::json list_open_positions(std::string tr_account_id = "");
         

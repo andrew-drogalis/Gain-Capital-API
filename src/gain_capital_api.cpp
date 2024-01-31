@@ -11,6 +11,8 @@
 #include <chrono>
 #include <map>
 
+GCapiClient::GCapiClient() { }
+
 GCapiClient::GCapiClient(std::string username, std::string password, std::string apikey) {
 
     rest_url_v2 = "https://ciapi.cityindex.com/v2";
@@ -389,10 +391,9 @@ std::map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::str
     return response_map;
 }
 
-std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_map, std::vector<std::string> market_name_list, std::string tr_account_id) {
+std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_map, std::string tr_account_id) {
     // Makes a new trade market order
     // :param trade_map: JSON object formated as in the example below
-	// :param market_name_list: market name (e.g. USD/CAD)
 	// :param trading_acc_id: trading account ID
 	// :return: error_list: list of symbol name that failed ot place trade
     // TRADE_MAP = {{"MARKET_NAME",{
@@ -403,6 +404,12 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
     std::vector<std::string> error_list = {};
 
     if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+
+    std::vector<std::string> market_name_list;
+
+    for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) {
+        market_name_list.push_back(it.key());
+    }
 
     int offset_seconds = 10;
     unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den + offset_seconds;
@@ -488,10 +495,9 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
     return error_list;
 }
 
-std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map, std::vector<std::string> market_name_list, std::string tr_account_id) {
+std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map, std::string tr_account_id) {
     // Makes a new trade limit order
     // :param trade_map: JSON object formated as in the example below
-	// :param market_name_list: market name (e.g. USD/CAD)
 	// :param trading_acc_id: trading account ID
 	// :return: error_list: list of symbol name that failed ot place trade
     // TRADE_MAP = {{"MARKET_NAME",{
@@ -506,6 +512,12 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
     std::vector<std::string> error_list = {};
 
     if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+
+    std::vector<std::string> market_name_list;
+
+    for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) {
+        market_name_list.push_back(it.key());
+    }
 
     int offset_seconds = 10;
     unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den + offset_seconds;
