@@ -87,7 +87,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
         trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}};
     }
     
-    std::vector<std::string> market_order_response = gc_api.trade_market_order(trades_map_market, currency_pairs);
+    std::vector<std::string> market_order_response = gc_api.trade_market_order(trades_map_market);
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
@@ -99,7 +99,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
 
-    std::vector<std::string> limit_order_response = gc_api.trade_limit_order(trades_map_limit, currency_pairs);
+    std::vector<std::string> limit_order_response = gc_api.trade_limit_order(trades_map_limit);
 ```
 
 ### Monitoring Trades
