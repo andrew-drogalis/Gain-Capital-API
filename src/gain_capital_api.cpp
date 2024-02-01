@@ -17,10 +17,18 @@ GCapiClient::GCapiClient(std::string username, std::string password, std::string
 
     rest_url_v2 = "https://ciapi.cityindex.com/v2";
     rest_url = "https://ciapi.cityindex.com/TradingAPI";
+    session_username = username;
+
+    auth_payload = {{"UserName", username}, {"Password", password},{"AppKey", apikey}};
+
+    authenticate_session();
+    get_account_info();
+}
+
+void GCapiClient::authenticate_session() {
 
     cpr::Header headers = cpr::Header{{"Content-Type", "application/json"}};
-    nlohmann::json payload = {{"UserName", username}, {"Password", password},{"AppKey", apikey}};
-    
+
     std::string status_code_error = "No Staus Code Error";
     std::string url = rest_url_v2 + "/Session";
     std::string resp_session;
@@ -28,7 +36,7 @@ GCapiClient::GCapiClient(std::string username, std::string password, std::string
     // ---------------------------
     for (int x; x < 4; x++) {
         try {
-            cpr::Response r = cpr::Post(cpr::Url{url}, headers, cpr::Body{payload.dump()});
+            cpr::Response r = cpr::Post(cpr::Url{url}, headers, cpr::Body{auth_payload.dump()});
 
             if (r.status_code != 200) { throw r;}
             
@@ -63,7 +71,44 @@ GCapiClient::GCapiClient(std::string username, std::string password, std::string
         }
     }
     // ---------------------------
-    session_header = {{"Content-Type","application/json"},{"UserName",username},{"Session",resp_session}};
+    session_header = {{"Content-Type","application/json"},{"UserName",session_username},{"Session",resp_session}};
+}
+
+void GCapiClient::validate_session() {
+    // Validates current session and updates if expired
+    nlohmann::json resp;
+
+    nlohmann::json payload = {{"ClientAccountId", client_account_id},{"UserName",session_username},{"Session", session_header["Session"]},{"TradingAccountId", trading_account_id}};
+
+    for (int x = 0; x < 3; x++) {
+        try {
+            cpr::Url url = cpr::Url{rest_url_v2 + "/Session/validate"};
+            cpr::Response r = cpr::Post(url, session_header, cpr::Body{payload.dump()});
+
+            if (r.status_code != 200) { throw r;}
+
+            resp = nlohmann::json::parse(r.text);
+
+            if (resp["isAuthenticated"] == false) {
+                authenticate_session();
+            } 
+            break;
+        }
+        catch (cpr::Response r) { 
+            std::cerr << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
+            BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text;
+            if (x == 2) { std::terminate(); }
+            sleep(1);
+        }
+        catch (...) { 
+            if (x == 2) {
+                BOOST_LOG_TRIVIAL(fatal) << "Validate Session Unknown Failure";
+                std::cerr << "Validate Session Unknown Failure" << std::endl;
+                std::terminate();
+            }
+            sleep(1);
+        }
+    }
 }
 
 nlohmann::json GCapiClient::get_account_info(std::string param) {

@@ -5,3 +5,5 @@ CMakeFiles/
 _deps/
 Makefile
 cmake_install.cmake
+libgain_capital_api*
+Example
