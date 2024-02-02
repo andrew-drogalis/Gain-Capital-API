@@ -41,7 +41,7 @@ void GCapiClient::authenticate_session() {
     std::string resp_session;
     
     // ---------------------------
-    for (int x; x < 4; x++) {
+    for (int x; x < 4; ++x) {
         try {
             cpr::Response r = cpr::Post(cpr::Url{url}, headers, cpr::Body{auth_payload.dump()});
 
@@ -86,7 +86,7 @@ void GCapiClient::validate_session() {
 
     nlohmann::json payload = {{"ClientAccountId", client_account_id},{"UserName",session_username},{"Session", session_header["Session"]},{"TradingAccountId", trading_account_id}};
 
-    for (int x = 0; x < 3; x++) {
+    for (int x = 0; x < 3; ++x) {
         try {
             cpr::Url url = cpr::Url{rest_url_v2 + "/Session/validate"};
             cpr::Response r = cpr::Post(url, session_header, cpr::Body{payload.dump()});
@@ -123,7 +123,7 @@ nlohmann::json GCapiClient::get_account_info(std::string param) {
     // :return: trading account information
     nlohmann::json resp = {};
     
-    for (int x = 0; x < 3; x++) {
+    for (int x = 0; x < 3; ++x) {
         try {
             cpr::Url url = cpr::Url{rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
             cpr::Response r = cpr::Get(url, session_header);
@@ -171,7 +171,7 @@ nlohmann::json GCapiClient::get_margin_info(std::string param) {
 
     cpr::Url url = cpr::Url{rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
 
-    for (int x; x < 3; x++) {
+    for (int x; x < 3; ++x) {
         try {
             cpr::Response r = cpr::Get(url, session_header);
 
@@ -214,7 +214,7 @@ std::map<std::string, int> GCapiClient::get_market_ids(std::vector<std::string> 
     market_id_map = {};
     int market_id = 0;
 
-    for (int x = 0; x < market_name_list.size(); x++) {
+    for (int x = 0; x < market_name_list.size(); ++x) {
         std::string market_name = market_name_list[x];
         try {
             cpr::Url url = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
@@ -245,7 +245,7 @@ std::map<std::string, std::string> GCapiClient::get_market_info(std::vector<std:
     // :return: market information
     std::map<std::string, std::string> response_map = {};
 
-    for (int x = 0; x < market_name_list.size(); x++) {
+    for (int x = 0; x < market_name_list.size(); ++x) {
         std::string market_name = market_name_list[x];
         try {
             cpr::Url url = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
@@ -287,7 +287,7 @@ std::map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::s
 
     std::transform(price_type.begin(), price_type.end(), price_type.begin(), ::toupper);
 	
-    for (int x = 0; x < market_name_list.size(); x++) {
+    for (int x = 0; x < market_name_list.size(); ++x) {
         std::string market_name = market_name_list[x];
         std::string market_id = "0";
         try {
@@ -382,7 +382,7 @@ std::map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::str
         }
     } else { span = 1; }
 
-    for (int x = 0; x < market_name_list.size(); x++) {
+    for (int x = 0; x < market_name_list.size(); ++x) {
         std::string market_name = market_name_list[x];
         std::string market_id;
         try {
@@ -472,7 +472,7 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
         // -----------------------
         error_list = {};
 
-        for (int x = 0; x < market_name_list.size(); x++) {
+        for (int x = 0; x < market_name_list.size(); ++x) {
             std::string market_name = market_name_list[x];
             std::string market_id;
 
@@ -579,7 +579,7 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
         // -----------------------
         error_list = {};
 
-        for (int x = 0; x < market_name_list.size(); x++) {
+        for (int x = 0; x < market_name_list.size(); ++x) {
             std::string market_name = market_name_list[x];
             std::string market_id;
 
@@ -674,7 +674,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id) {
     if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
     cpr::Url url = cpr::Url{rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
 
-    for (int x = 0; x < 3; x++) {
+    for (int x = 0; x < 3; ++x) {
         try {
             cpr::Response r = cpr::Get(url, session_header);
 
@@ -712,7 +712,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id) {
     cpr::Url url = cpr::Url{rest_url + "/order/activeorders"};
     nlohmann::json active_order_payload = {{"TradingAccountId",tr_account_id}, {"MaxResults", "100"}};
 
-    for (int x = 0; x < 3; x++) {
+    for (int x = 0; x < 3; ++x) {
         try {
             cpr::Response r = cpr::Post(url, session_header, cpr::Body{active_order_payload.dump()});
 
@@ -751,7 +751,7 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
     cpr::Url url = cpr::Url{rest_url + "/order/cancel"};
     nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id},{"OrderId", order_id}};
 
-    for (int x = 0; x < 3; x++) {
+    for (int x = 0; x < 3; ++x) {
         try {
             cpr::Response r = cpr::Post(url, session_header, cpr::Body{cancel_order_payload.dump()});
 
