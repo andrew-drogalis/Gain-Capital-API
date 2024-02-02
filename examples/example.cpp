@@ -19,6 +19,9 @@ int main () {
     // Initalize GCapiClient
     GCapiClient gc_api = GCapiClient(username, password, apikey);
 
+    // Authenticates Session if Expired
+    gc_api.validate_session();
+
     // Get Account Information
     // Sets Class Variable with Trading Account ID
     nlohmann::json account_response = gc_api.get_account_info();
@@ -61,5 +64,21 @@ int main () {
     nlohmann::json active_order_response = gc_api.list_active_orders();
 
     nlohmann::json open_position_response = gc_api.list_open_positions();
+
+    // Cancel Active Orders
+    for (nlohmann::json active_order : active_order_response)  {
+        
+        // Cancel Market Orders
+        if (active_order.contains("TradeOrder")) {
+            string order_id = active_order['TradeOrder']['OrderId'];
+            gc_api.cancel_order(order_id);
+        }
+
+        // Cancel Limit Orders
+        if (active_order.contains("StopLimitOrder")) {
+            string order_id = active_order['StopLimitOrder']['OrderId'];
+            gc_api.cancel_order(order_id);
+        }
+    }
 
 }

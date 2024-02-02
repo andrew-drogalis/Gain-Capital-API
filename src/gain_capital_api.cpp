@@ -3,6 +3,8 @@
 #include <json.hpp>
 #include <cpr/cpr.h>
 #include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/console.hpp>
+
 #include <algorithm>
 #include <iostream>
 #include <exception>
@@ -13,6 +15,8 @@
 
 GCapiClient::GCapiClient() { }
 
+GCapiClient::~GCapiClient() { }
+
 GCapiClient::GCapiClient(std::string username, std::string password, std::string apikey) {
 
     rest_url_v2 = "https://ciapi.cityindex.com/v2";
@@ -20,6 +24,8 @@ GCapiClient::GCapiClient(std::string username, std::string password, std::string
     session_username = username;
 
     auth_payload = {{"UserName", username}, {"Password", password},{"AppKey", apikey}};
+
+    boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
 
     authenticate_session();
     get_account_info();
@@ -49,22 +55,21 @@ void GCapiClient::authenticate_session() {
                 status_code_error = "Session Init Status Code Unusual: " + resp_status_code;
 
                 BOOST_LOG_TRIVIAL(fatal) << status_code_error;
-                std::cerr << status_code_error << std::endl;
                 std::terminate();
             }
             resp_session = resp["session"];
             break;
         }
         catch (cpr::Response r) { 
-            std::cerr << "Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(fatal) << "Error - Status Code: " << r.status_code << "; Message: " << r.text;
+
             if (x == 3) { std::terminate(); }
             sleep(1.5);
         }
         catch (...) { 
             if (x == 3) {
                 BOOST_LOG_TRIVIAL(fatal) << "Session Request Didn't POST - Check Internet";
-                std::cerr << "Session Request Didn't POST - Check Internet" << std::endl;
+                
                 std::terminate();
             }
             sleep(1.5);
@@ -95,15 +100,15 @@ void GCapiClient::validate_session() {
             break;
         }
         catch (cpr::Response r) { 
-            std::cerr << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text;
+
             if (x == 2) { std::terminate(); }
             sleep(1);
         }
         catch (...) { 
             if (x == 2) {
                 BOOST_LOG_TRIVIAL(fatal) << "Validate Session Unknown Failure";
-                std::cerr << "Validate Session Unknown Failure" << std::endl;
+
                 std::terminate();
             }
             sleep(1);
@@ -135,15 +140,15 @@ nlohmann::json GCapiClient::get_account_info(std::string param) {
             break;
         }
         catch (cpr::Response r) { 
-            std::cerr << "Account Info Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(fatal) << "Account Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
+
             if (x == 2) { std::terminate(); }
             sleep(1);
         }
         catch (...) { 
             if (x == 2) {
                 BOOST_LOG_TRIVIAL(fatal) << "Get Account Info Unknown Failure";
-                std::cerr << "Get Account Info Unknown Failure" << std::endl;
+                
                 std::terminate();
             }
             sleep(1);
@@ -182,15 +187,15 @@ nlohmann::json GCapiClient::get_margin_info(std::string param) {
             break;
         }
         catch (cpr::Response r) { 
-            std::cerr << "Margin Info Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(fatal) << "Margin Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
+            
             if (x == 2) { std::terminate(); }
             sleep(1);
         }
         catch (...) { 
             if (x == 2) {
                 BOOST_LOG_TRIVIAL(fatal) << "Get Margin Info Uknown Failure";
-                std::cerr << "Get Margin Info Unkown Failure" << std::endl;
+
                 std::terminate();
             }
             sleep(1);
@@ -222,12 +227,10 @@ std::map<std::string, int> GCapiClient::get_market_ids(std::vector<std::string> 
             market_id_map[market_name] = market_id;
         }
         catch (cpr::Response r) { 
-            std::cout << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
         }
         catch (...) { 
             BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Market Id for " << market_name;
-            std::cout << "Uknown Error in Fetching Market Id for " << market_name << std::endl;
         }
     }
     // -------------------
@@ -258,12 +261,10 @@ std::map<std::string, std::string> GCapiClient::get_market_info(std::vector<std:
             }   
         }
         catch (cpr::Response r) { 
-            std::cout << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
         }
         catch (...) { 
             BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Market Id for " << market_name;
-            std::cout << "Uknown Error in Fetching Market Id for " << market_name << std::endl;
         }
     }
     // -------------------
@@ -325,14 +326,14 @@ std::map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::s
             }
             catch (cpr::Response r) { 
                 if (j == 2) { response_map[market_name] = {"Error"}; }
-                std::cout << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
                 BOOST_LOG_TRIVIAL(error) << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
+
                 sleep(1);
             }
             catch (...) {
                 if (j == 2) { response_map[market_name] = {"Error"}; }
                 BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Price for " << market_name;
-                std::cout << "Uknown Error in Fetching Price for " << market_name << std::endl;
+
                 sleep(1);
             }
         }
@@ -420,14 +421,14 @@ std::map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::str
             }
             catch (cpr::Response r) { 
                 if (j == 2) { response_map[market_name] = {"Error"}; }
-                std::cout << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
                 BOOST_LOG_TRIVIAL(error) << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
+
                 sleep(1);
             }
             catch (...) {
                 if (j == 2) { response_map[market_name] = {"Error"}; }
                 BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching OHLC for " << market_name;
-                std::cout << "Uknown Error in Fetching OHLC for " << market_name << std::endl;
+
                 sleep(1);
             }
         }
@@ -522,12 +523,11 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
                     }
                 } else {
                      error_list.push_back(market_name);
-                     std::cout << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text << std::endl;
                      BOOST_LOG_TRIVIAL(debug) << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text;
                 }
             }
             catch (...) { 
-                std::cout << "Error Placing Market Order for " << market_name << std::endl;
+                error_list.push_back(market_name);
                 BOOST_LOG_TRIVIAL(error) << "Error Placing Market Order for " << market_name;
             }
         }
@@ -648,12 +648,11 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
                     }
                 } else {
                      error_list.push_back(market_name);
-                     std::cout << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text << std::endl;
                      BOOST_LOG_TRIVIAL(debug) << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text;
                 }
             }
             catch (...) { 
-                std::cout << "Error Placing Limit Order for " << market_name << std::endl;
+                error_list.push_back(market_name);
                 BOOST_LOG_TRIVIAL(error) << "Error Placing Limit Order for " << market_name;
             }
         }
@@ -685,15 +684,15 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id) {
             break;
         }
         catch (cpr::Response r) { 
-            std::cerr << "Open Positions Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(fatal) << "Open Positions Error - Status Code: " << r.status_code << "; Message: " << r.text;
+
             if (x == 2) { std::terminate(); }
             sleep(1);
         }
         catch (...) { 
             if (x == 2) {
                 BOOST_LOG_TRIVIAL(fatal) << "List Open Position Uknown Failure";
-                std::cerr << "List Open Position Uknown Failure" << std::endl;
+
                 std::terminate();
             }
             sleep(1);
@@ -723,15 +722,15 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id) {
             break;
         }
         catch (cpr::Response r) { 
-            std::cerr << "Active Orders Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(fatal) << "Active Orders Error - Status Code: " << r.status_code << "; Message: " << r.text;
+
             if (x == 2) { std::terminate(); }
             sleep(1);
         }
         catch (...) { 
             if (x == 2) {
                 BOOST_LOG_TRIVIAL(fatal) << "List Active Order Failure " << resp;
-                std::cerr << "List Active Order Failure " << resp << std::endl;
+
                 std::terminate();
             }
             sleep(1);
@@ -761,15 +760,15 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
             break;
         }
         catch (cpr::Response r) { 
-            std::cerr << "Cancel Order Error - Status Code: " << r.status_code << "; Message: " << r.text << std::endl;
             BOOST_LOG_TRIVIAL(fatal) << "Cancel Order Error - Status Code: " << r.status_code << "; Message: " << r.text;
+            
             if (x == 2) { std::terminate(); }
             sleep(1);
         }
         catch (...) { 
             if (x == 2) {
                 BOOST_LOG_TRIVIAL(fatal) << "Cancel Order Uknown Failure";
-                std::cerr << "Cancel Order Unknown Failure" << std::endl;
+
                 std::terminate();
             }
             sleep(1);

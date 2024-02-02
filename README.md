@@ -6,11 +6,13 @@
 * [Instructions](#Instructions)
     - [Downloading Dependencies](#Downloading-Dependencies)
     - [Initializing API](#Initializing-API)
+    - [Validating Session](#Validating-Session)
     - [Account & Margin Information](#Account-&-Margin-Information)
     - [Market IDs & Information](#Market-IDs-&-Information)
     - [Fetching OHLC Data](#Fetching-OHLC-Data)
     - [Placing Trades](#Placing-Trades)
     - [Monitoring Trades](#Monitoring-Trades)
+    - [Canceling Active Orders](#Canceling-Active-Orders)
 * [Installing](#Installing)
 * [Dependencies](#Dependencies)
 * [Lightstreamer](#Lightstreamer)
@@ -49,6 +51,14 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
     // Initalize GCapiClient
     GCapiClient gc_api = GCapiClient(username, password, apikey);
 ```
+
+### Validating Session
+
+```c
+    // Authenticates Session if Expired
+    gc_api.validate_session();
+```
+
 
 ### Account & Margin Information
 
@@ -109,6 +119,26 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
     nlohmann::json active_order_response = gc_api.list_active_orders();
 
     nlohmann::json open_position_response = gc_api.list_open_positions();
+```
+
+### Canceling Active Orders
+
+```c
+    // Cancel Active Orders
+    for (nlohmann::json active_order : active_order_response)  {
+        
+        // Cancel Market Orders
+        if (active_order.contains("TradeOrder")) {
+            string order_id = active_order['TradeOrder']['OrderId'];
+            gc_api.cancel_order(order_id);
+        }
+
+        // Cancel Limit Orders
+        if (active_order.contains("StopLimitOrder")) {
+            string order_id = active_order['StopLimitOrder']['OrderId'];
+            gc_api.cancel_order(order_id);
+        }
+    }
 ```
 
 ## Installing

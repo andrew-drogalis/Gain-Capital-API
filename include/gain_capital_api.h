@@ -3,6 +3,7 @@
 
 #include <json.hpp>
 #include <cpr/cpr.h>
+
 #include <string>
 #include <vector>
 #include <map>
@@ -10,17 +11,14 @@
 class GCapiClient {
 
     public:
-        cpr::Header session_header;
-        nlohmann::json auth_payload;
-        nlohmann::json session_payload;
-        std::string rest_url_v2;
-        std::string rest_url;
+        // User may want to access these elements
         std::string trading_account_id = "";
         std::string client_account_id = "";
-        std::string session_username;
         std::map<std::string, int> market_id_map;
 
         GCapiClient();
+
+        ~GCapiClient();
 
         GCapiClient(std::string username, std::string password, std::string appkey);
 
@@ -49,6 +47,14 @@ class GCapiClient {
         nlohmann::json list_active_orders(std::string tr_account_id = "");
 
         nlohmann::json cancel_order(std::string order_id, std::string tr_account_id = "");
+
+    private:
+        std::string rest_url_v2;
+        std::string rest_url;
+        cpr::Header session_header;
+        std::string session_username;
+        nlohmann::json auth_payload;
+        nlohmann::json session_payload;
 };
 
 #endif
