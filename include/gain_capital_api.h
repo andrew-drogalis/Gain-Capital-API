@@ -1,12 +1,12 @@
 #ifndef GAIN_CAPITAL_API_H
 #define GAIN_CAPITAL_API_H
 
-#include <json.hpp>
-#include <cpr/cpr.h>
-
 #include <string>
 #include <vector>
 #include <map>
+
+#include <json.hpp>
+#include <cpr/cpr.h>
 
 class GCapiClient {
 

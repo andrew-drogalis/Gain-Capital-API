@@ -1,9 +1,5 @@
 
 #include <gain_capital_api.h>
-#include <json.hpp>
-#include <cpr/cpr.h>
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/console.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -12,6 +8,11 @@
 #include <vector>
 #include <chrono>
 #include <map>
+
+#include <json.hpp>
+#include <cpr/cpr.h>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/console.hpp>
 
 GCapiClient::GCapiClient() { }
 
