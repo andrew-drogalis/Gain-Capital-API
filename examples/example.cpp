@@ -17,7 +17,7 @@ int main () {
     vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
 
     // Initalize GCapiClient
-    GCapiClient gc_api = GCapiClient(username, password, apikey);
+    gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 
     // Authenticates Session if Expired
     gc_api.validate_session();

@@ -14,6 +14,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/console.hpp>
 
+namespace gaincapital {
+
 GCapiClient::GCapiClient() { }
 
 GCapiClient::~GCapiClient() { }
@@ -777,4 +779,6 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
     }
     // -------------------
     return resp;
+}
+
 }

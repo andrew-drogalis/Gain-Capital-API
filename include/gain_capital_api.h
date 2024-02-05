@@ -8,6 +8,8 @@
 #include <json.hpp>
 #include <cpr/cpr.h>
 
+namespace gaincapital {
+
 class GCapiClient {
 
     public:
@@ -56,5 +58,7 @@ class GCapiClient {
         nlohmann::json auth_payload;
         nlohmann::json session_payload;
 };
+
+}
 
 #endif
