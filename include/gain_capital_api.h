@@ -59,6 +59,6 @@ class GCapiClient {
         nlohmann::json session_payload;
 };
 
-}
+} // namespace gaincapital
 
 #endif

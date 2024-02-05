@@ -781,4 +781,4 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
     return resp;
 }
 
-}
+} // namespace gaincapital
