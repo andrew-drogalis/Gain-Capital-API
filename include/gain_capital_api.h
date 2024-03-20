@@ -1,3 +1,6 @@
+// Copyright 2024, Andrew Drogalis
+// GNU License
+
 #ifndef GAIN_CAPITAL_API_H
 #define GAIN_CAPITAL_API_H
 
@@ -5,8 +8,8 @@
 #include <vector>
 #include <map>
 
-#include <json.hpp>
-#include <cpr/cpr.h>
+#include "json.hpp"
+#include "cpr/cpr.h"
 
 namespace gaincapital {
 
@@ -27,6 +30,14 @@ class GCapiClient {
         void authenticate_session();
 
         void validate_session();
+
+        void validate_session_header();
+
+        void validate_auth_payload();
+
+        void validate_account_ids();
+
+        void set_testing_rest_urls(std::string url);
 
         nlohmann::json get_account_info(std::string param = "");
 
@@ -51,10 +62,10 @@ class GCapiClient {
         nlohmann::json cancel_order(std::string order_id, std::string tr_account_id = "");
 
     private:
-        std::string rest_url_v2;
-        std::string rest_url;
+        std::string rest_url_v2 = "https://ciapi.cityindex.com/v2";
+        std::string rest_url = "https://ciapi.cityindex.com/TradingAPI";
         cpr::Header session_header;
-        std::string session_username;
+        std::string session_username = "";
         nlohmann::json auth_payload;
         nlohmann::json session_payload;
 };

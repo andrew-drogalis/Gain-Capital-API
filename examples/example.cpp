@@ -1,9 +1,13 @@
+// Copyright 2024, Andrew Drogalis
+// GNU License
 
-#include <gain_capital_api.h>
-#include <json.hpp>
+#include "gain_capital_api.h"
+
 #include <string>
 #include <vector>
 #include <iostream>
+
+#include "json.hpp"
 
 using namespace std;
 
@@ -20,7 +24,7 @@ int main () {
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 
     // Authenticates Session if Expired
-    gc_api.validate_session();
+    // gc_api.validate_session();
 
     // Get Account Information
     // Sets Class Variable with Trading Account ID

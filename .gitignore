@@ -1,9 +1,16 @@
+# Vscode Extensions
 .vscode/
+.trunk/
+
 build/
+
+# Cmake Files
 CMakeCache.txt
 CMakeFiles/
 _deps/
 Makefile
 cmake_install.cmake
+
+# Executables
 libgain_capital_api*
 Example
