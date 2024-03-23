@@ -29,11 +29,11 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
 
 ```
     Fedora:
-        dnf install boost-devel
+        dnf install boost-devel libmicrohttpd-devel
     Debian:
-        apt-get install libboost-all-dev 
+        apt-get install libboost-all-dev libmicrohttpd-devel
     Arch: 
-        pacman -Ss boost
+        pacman -Ss boost libmicrohttpd
 ```
 
 ### Initializing API
@@ -155,6 +155,7 @@ To build the shared library and header files, run the commands below.
 ## Dependencies
 
 - [Boost](https://www.boost.org/) - *Must be installed by user*
+- [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) - Required for Tests Only - *Must be installed by user*
 - [CPR](https://github.com/libcpr/cpr) - Included in CMake Fetch Content
 - [JSON](https://github.com/nlohmann/json) - .hpp file included in repository
 
