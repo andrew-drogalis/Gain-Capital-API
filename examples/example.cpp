@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 #include "json.hpp"
 
@@ -23,8 +24,8 @@ int main () {
     // Initalize GCapiClient
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 
-    // Authenticates Session if Expired
-    // gc_api.validate_session();
+    // Required for First Authentication
+    gc_api.authenticate_session();
 
     // Get Account Information
     // Sets Class Variable with Trading Account ID
@@ -35,15 +36,15 @@ int main () {
 
     // Get Market IDs
     // Sets Class Map with Market IDs
-    std::map<std::string, int> market_ids_response = gc_api.get_market_ids(currency_pairs);
+    std::unordered_map<std::string, int> market_ids_response = gc_api.get_market_ids(currency_pairs);
 
     // Get Currency Prices
-    std::map<std::string, nlohmann::json> price_response = gc_api.get_prices(currency_pairs);
+    std::unordered_map<std::string, nlohmann::json> price_response = gc_api.get_prices(currency_pairs);
 
     // Get OHLC Bars
     string interval = "MINUTE";
     int num_ticks = 10;
-    std::map<std::string, nlohmann::json> ohlc_response = gc_api.get_ohlc(currency_pairs, interval, num_ticks);
+    std::unordered_map<std::string, nlohmann::json> ohlc_response = gc_api.get_ohlc(currency_pairs, interval, num_ticks);
 
     // Place Market Order
     nlohmann::json trades_map_market = {};

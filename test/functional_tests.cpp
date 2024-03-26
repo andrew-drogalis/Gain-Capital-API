@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "json.hpp"
 #include "gtest/gtest.h"
 #include "httpmockserver/mock_server.h"
 #include "httpmockserver/test_environment.h"
@@ -26,62 +27,62 @@ class HTTPMock: public httpmock::MockServer {
     {
         // Authenticate Session
         if (method == "POST" && matchesPrefix(url, "/Session")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // Validate Session
         else if (method == "POST" && matchesPrefix(url, "/Session/validate")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // Account Info
         else if (method == "GET" && matchesPrefix(url, "/userAccount/ClientAndTradingAccount")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // Margin Info
         else if (method == "GET" && matchesPrefix(url, "/margin/clientAccountMargin?clientAccountId=TEST")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // Market IDs & Market Info
         else if (method == "GET" && matchesPrefix(url, "/cfd/markets?MarketName=TEST_MARKET")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // Prices
-        else if (method == "GET" && matchesPrefix(url, "/example")) {
-            // Do something and return response
+        else if (method == "GET" && matchesPrefix(url, "/market/TEST_MARKET/tickhistory")) {
+            
             return Response(500, "Fake HTTP response");
         }
         // OHLC
-        else if (method == "GET" && matchesPrefix(url, "/example")) {
-            // Do something and return response
+        else if (method == "GET" && matchesPrefix(url, "/market/TEST_MARKET/barhistory")) {
+        
             return Response(500, "Fake HTTP response");
         }
         // Trade Market Order
-        else if (method == "GET" && matchesPrefix(url, "/order/newtradeorder")) {
-            // Do something and return response
+        else if (method == "POST" && matchesPrefix(url, "/order/newtradeorder")) {
+            
             return Response(500, "Fake HTTP response");
         }
         // Trade Limit Order
         else if (method == "POST" && matchesPrefix(url, "/order/newstoplimitorder")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // List Open Positons
         else if (method == "GET" && matchesPrefix(url, "/order/openpositions?TradingAccountId=TEST")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // List Active Orders
         else if (method == "POST" && matchesPrefix(url, "/order/activeorders")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // Cancel Order
         else if (method == "POST" && matchesPrefix(url, "/order/cancel")) {
-            // Do something and return response
+            
             return Response(500, "Fake HTTP response");
         }
         // Return "URI not found" for the undefined methods
@@ -95,11 +96,16 @@ class HTTPMock: public httpmock::MockServer {
 };
 
 
-TEST(MyTest, dummyTest) {
+TEST(GainCapitalFunctional, Check_All_APIs_Base_Case) {
     // Here should be implementation of test case using HTTP server.
     // HTTP requests are processed by HTTPMock::responseHandler(...)
     // I. e.: when HTTP POST request is sent on localhost:9200/example, then
     // response with status code 500 and body "Fake HTTP response" is returned.
+    const gaincapital::GCapiClient g{"TEST_USER", "TEST_PASSWORD", "TEST_APIKEY"};
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+    g.validate_session();
+
 }
 
 

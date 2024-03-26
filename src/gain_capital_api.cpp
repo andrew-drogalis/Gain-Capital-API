@@ -24,9 +24,9 @@ GCapiClient::~GCapiClient() { }
 
 GCapiClient::GCapiClient(std::string username, std::string password, std::string apikey) {
     auth_payload = {{"UserName", username}, {"Password", password},{"AppKey", apikey}};
+
     // Optional Boost Logging to STD Output
     boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
-    authenticate_session();
 }
 
 // =================================================================================================================

@@ -9,6 +9,7 @@ namespace {
 
 TEST(GainCapital, DefaultConstructor) {
     const gaincapital::GCapiClient g;
+    
     EXPECT_EQ(g.trading_account_id, "");
     EXPECT_EQ(g.client_account_id, "");
 }

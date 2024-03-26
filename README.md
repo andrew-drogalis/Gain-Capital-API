@@ -6,7 +6,7 @@
 * [Instructions](#Instructions)
     - [Downloading Dependencies](#Downloading-Dependencies)
     - [Initializing API](#Initializing-API)
-    - [Validating Session](#Validating-Session)
+    - [Authenticating Session](#Authenticating-Session)
     - [Account & Margin Information](#Account-&-Margin-Information)
     - [Market IDs & Information](#Market-IDs-&-Information)
     - [Fetching OHLC Data](#Fetching-OHLC-Data)
@@ -52,11 +52,14 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 ```
 
-### Validating Session
+### Authenticating Session
 
 ```c
-    // Authenticates Session if Expired
-    gc_api.validate_session();
+    // Required for First Authentication
+    bool success = gc_api.authenticate_session();
+
+    // Authenticates Token Session if Expired
+    bool success = gc_api.validate_session();
 ```
 
 
