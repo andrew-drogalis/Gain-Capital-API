@@ -53,19 +53,37 @@ class GCapiClient {
 
         std::unordered_map<std::string, int> get_market_ids(std::vector<std::string> positions);
 
-        std::unordered_map<std::string, std::string> get_market_info(std::vector<std::string> market_name_list, std::string param = "");
+        std::unordered_map<std::string, std::string> get_market_info(
+            std::vector<std::string> market_name_list, 
+            std::string param = "");
 
-        std::unordered_map<std::string, nlohmann::json> get_prices(std::vector<std::string> market_name_list, int num_ticks = 1, long unsigned int from_ts = 0, long unsigned int to_ts = 0, std::string price_type = "MID");
+        std::unordered_map<std::string, nlohmann::json> get_prices(
+            std::vector<std::string> market_name_list, 
+            int num_ticks = 1, 
+            long unsigned int from_ts = 0, 
+            long unsigned int to_ts = 0, 
+            std::string price_type = "MID");
 
-        std::unordered_map<std::string, nlohmann::json> get_ohlc(std::vector<std::string> market_name_list, std::string interval, int num_ticks = 1, int span = 1, long unsigned int from_ts = 0, long unsigned int to_ts = 0);
+        std::unordered_map<std::string, nlohmann::json> get_ohlc(
+            std::vector<std::string> market_name_list, 
+            std::string interval, 
+            int num_ticks = 1, 
+            int span = 1, 
+            long unsigned int from_ts = 0, 
+            long unsigned int to_ts = 0);
 
-        std::vector<std::string> trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id = "");
+        std::vector<std::string> trade_order(
+            nlohmann::json trade_map, 
+            std::string type, 
+            std::string tr_account_id = "");
 
         nlohmann::json list_open_positions(std::string tr_account_id = "");
         
         nlohmann::json list_active_orders(std::string tr_account_id = "");
 
-        nlohmann::json cancel_order(std::string order_id, std::string tr_account_id = "");
+        nlohmann::json cancel_order(
+            std::string order_id, 
+            std::string tr_account_id = "");
 
     private:
         std::string rest_url_v2 = "https://ciapi.cityindex.com/v2";

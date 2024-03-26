@@ -58,7 +58,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
     // Required for First Authentication
     bool success = gc_api.authenticate_session();
 
-    // Authenticates Token Session if Expired
+    // Authenticates Session Token if Expired
     bool success = gc_api.validate_session();
 ```
 
@@ -96,7 +96,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
 ```c
     // Place Market Order
     nlohmann::json trades_map_market = {};
-    for (string symbol : currency_pairs) {
+    for (string const &symbol : currency_pairs) {
         trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}};
     }
     
@@ -104,7 +104,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
-    for (string symbol : currency_pairs) {
+    for (string const &symbol : currency_pairs) {
         float mid_price = price_response[symbol][0]["Price"];
         float trigger_price = mid_price * 1.1;
         float stop_price = mid_price * 0.9;

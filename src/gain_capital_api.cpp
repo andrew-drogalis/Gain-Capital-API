@@ -287,7 +287,11 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> market_name_list, int num_ticks, long unsigned int from_ts, long unsigned int to_ts, std::string price_type) {
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> market_name_list, 
+    int num_ticks, 
+    long unsigned int from_ts, 
+    long unsigned int to_ts, 
+    std::string price_type) {
 	/* Get prices
        :param market_name_list: market name (e.g. USD/CAD)
 	   :param num_ticks: number of price ticks/data to retrieve
@@ -356,7 +360,12 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, std::string interval, int num_ticks, int span, long unsigned int from_ts, long unsigned int to_ts) {
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, 
+    std::string interval, 
+    int num_ticks, 
+    int span, 
+    long unsigned int from_ts, 
+    long unsigned int to_ts) {
     /* Get the open, high, low, close of a specific market_id
 	   :param market_name_list: market name (e.g. USD/CAD)
 	   :param num_ticks: number of price ticks/data to retrieve
@@ -449,7 +458,9 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
     return response_map;
 }
 
-std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id) {
+std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, 
+    std::string type,
+    std::string tr_account_id) {
     /* Makes a new trade order
        :param trade_map: JSON object formated as in the example below
        :param type: Limit or Market order tpye

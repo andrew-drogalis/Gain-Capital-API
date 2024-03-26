@@ -14,9 +14,7 @@ using namespace std;
 
 int main () {
     // Forex.com Account Info
-    string username = "BLANK";
-    string password = "BLANK";
-    string apikey = "BLANK";
+    string username = "BLANK", password = "BLANK", apikey = "BLANK";
 
     // List of Currencies to Trade
     vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
@@ -48,14 +46,14 @@ int main () {
 
     // Place Market Order
     nlohmann::json trades_map_market = {};
-    for (string symbol : currency_pairs) {
+    for (string const &symbol : currency_pairs) {
         trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}};
     }
     // std::vector<std::string> market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
-    for (string symbol : currency_pairs) {
+    for (string const &symbol : currency_pairs) {
         float mid_price = price_response[symbol][0]["Price"];
         float trigger_price = mid_price * 1.1;
         float stop_price = mid_price * 0.9;
