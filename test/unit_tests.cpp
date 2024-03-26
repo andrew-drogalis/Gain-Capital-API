@@ -1,3 +1,6 @@
+// Copyright 2024, Andrew Drogalis
+// GNU License
+
 #include "gain_capital_api.h"
 
 #include "gtest/gtest.h"

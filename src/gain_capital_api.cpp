@@ -32,17 +32,17 @@ GCapiClient::GCapiClient(std::string username, std::string password, std::string
 // =================================================================================================================
 // UTILITIES
 // =================================================================================================================
-void GCapiClient::authenticate_session() {
+bool GCapiClient::authenticate_session() {
     cpr::Header headers = cpr::Header{{"Content-Type", "application/json"}};
 
-    validate_auth_payload();
+    if (!validate_auth_payload()) { return false; }
 
-    std::string status_code_error = "No Staus Code Error";
     std::string url = rest_url_v2 + "/Session";
     std::string resp_session;
     
     // ---------------------------
-    for (int x; x < 4; ++x) {
+    int iteration = 0;
+    while(iteration < 2) {
         try {
             cpr::Response r = cpr::Post(cpr::Url{url}, headers, cpr::Body{auth_payload.dump()});
 
@@ -51,45 +51,38 @@ void GCapiClient::authenticate_session() {
             nlohmann::json resp = nlohmann::json::parse(r.text);
 
             if (resp["statusCode"] != 0) {
-
-                std::string resp_status_code = resp["statusCode"];
-
-                status_code_error = "Session Init Status Code Unusual: " + resp_status_code;
-
-                BOOST_LOG_TRIVIAL(fatal) << status_code_error;
-                std::terminate();
+                BOOST_LOG_TRIVIAL(fatal) << "Response is Valid, but Gain Capital Status Code Error: " << resp["statusCode"];
+                return false;
             }
             resp_session = resp["session"];
             break;
         }
         catch (cpr::Response r) { 
-            BOOST_LOG_TRIVIAL(fatal) << "Error - Status Code: " << r.status_code << "; Message: " << r.text;
-
-            if (x == 3) { std::terminate(); }
-            sleep(1.5);
+            BOOST_LOG_TRIVIAL(fatal) << "Authentication Error - Status Code: " << r.status_code << "; Message: " << r.text;
+            if (!iteration && (r.status_code == 500 || r.status_code == 504)) { sleep(1); continue; }
+            return false;
         }
         catch (...) { 
-            if (x == 3) {
-                BOOST_LOG_TRIVIAL(fatal) << "Session Request Didn't POST - Check Internet";
-                
-                std::terminate();
-            }
-            sleep(1.5);
+            BOOST_LOG_TRIVIAL(fatal) << "Uknown Authentication Error - Check Internet";
+            return false;
         }
+        ++iteration;
     }
     // ---------------------------
     session_header = {{"Content-Type","application/json"},{"UserName",session_username},{"Session",resp_session}};
+    return true;
 }
 
-void GCapiClient::validate_session() {
+bool GCapiClient::validate_session() {
     // Validates current session and updates if expired
     nlohmann::json resp = {};
 
-    validate_session_header();
+    if (!validate_session_header()) { return false; }
 
     nlohmann::json payload = {{"ClientAccountId", client_account_id},{"UserName",session_username},{"Session", session_header["Session"]},{"TradingAccountId", trading_account_id}};
 
-    for (int x = 0; x < 3; ++x) {
+    int iteration = 0;
+    while(iteration < 2) {
         try {
             cpr::Url url = cpr::Url{rest_url_v2 + "/Session/validate"};
             cpr::Response r = cpr::Post(url, session_header, cpr::Body{payload.dump()});
@@ -98,50 +91,49 @@ void GCapiClient::validate_session() {
 
             resp = nlohmann::json::parse(r.text);
 
-            if (resp["isAuthenticated"] == false) {
-                authenticate_session();
-            } 
+            if (resp["isAuthenticated"] == false) { authenticate_session(); } 
             break;
         }
         catch (cpr::Response r) { 
             BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text;
-
-            if (x == 2) { std::terminate(); }
-            sleep(1);
+            if (!iteration && (r.status_code == 500 || r.status_code == 504)) { sleep(1); continue; }
+            return false;
         }
         catch (...) { 
-            if (x == 2) {
-                BOOST_LOG_TRIVIAL(fatal) << "Validate Session Unknown Failure";
-
-                std::terminate();
-            }
-            sleep(1);
+            BOOST_LOG_TRIVIAL(fatal) << "Validate Session Unknown Failure";
+            return false;            
         }
+        ++iteration;
     }
+    return true;
 }
 
-void GCapiClient::validate_session_header() {
+bool GCapiClient::validate_session_header() {
     if (session_header.empty()) {
         BOOST_LOG_TRIVIAL(fatal) << "Session Not Authenticated, Run authenticate_session Command";
-        std::terminate();
+        return false;
     }
+    return true;
 }
 
-void GCapiClient::validate_auth_payload() {
+bool GCapiClient::validate_auth_payload() {
     if (auth_payload.empty()) {
         BOOST_LOG_TRIVIAL(fatal) << "Failed to Pass Username, Password, and API Key to Constructor";
-        std::terminate();
+        return false;
     }
+    return true;
 }
 
-void GCapiClient::validate_account_ids() {
+bool GCapiClient::validate_account_ids() {
     if (trading_account_id == "" || client_account_id == "") {
-        get_account_info();
+        if (get_account_info() != nlohmann::json{}) { return true; }
+        else { return false; }
     }
+    return true;
 }
 
 void GCapiClient::set_testing_rest_urls(std::string url) {
-    rest_url_v2 =url;
+    rest_url_v2 = url;
     rest_url = url;
 }
 
@@ -155,39 +147,33 @@ nlohmann::json GCapiClient::get_account_info(std::string param) {
     */
     nlohmann::json resp = {};
 
-    validate_session();
-    
-    for (int x = 0; x < 3; ++x) {
-        try {
-            cpr::Url url = cpr::Url{rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
-            cpr::Response r = cpr::Get(url, session_header);
+    if (validate_session()) { 
+        int interation = 0;
+        while (iteration < 2) {
+            try {
+                cpr::Url url = cpr::Url{rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
+                cpr::Response r = cpr::Get(url, session_header);
 
-            if (r.status_code != 200) { throw r;}
+                if (r.status_code != 200) { throw r;}
 
-            resp = nlohmann::json::parse(r.text);
+                resp = nlohmann::json::parse(r.text);
 
-            trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
-            client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
+                trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
+                client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
 
-            if (!param.empty()) {
-                return resp["tradingAccounts"][0][param];
+                if (!param.empty()) { return resp["tradingAccounts"][0][param]; }
+                break;
             }
-            break;
-        }
-        catch (cpr::Response r) { 
-            BOOST_LOG_TRIVIAL(fatal) << "Account Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
-
-            if (x == 2) { std::terminate(); }
-            sleep(1);
-        }
-        catch (...) { 
-            if (x == 2) {
+            catch (cpr::Response r) { 
+                BOOST_LOG_TRIVIAL(fatal) << "Account Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
+                if (!iteration && (r.status_code == 500 || r.status_code == 504)) { sleep(1); continue; }
+                break;
+            }
+            catch (...) { 
                 BOOST_LOG_TRIVIAL(fatal) << "Get Account Info Unknown Failure";
-                
-                std::terminate();
+                break;
             }
-            sleep(1);
-        }
+            ++iteration;
     }
     // -------------------
     return resp;
@@ -198,43 +184,37 @@ nlohmann::json GCapiClient::get_margin_info(std::string param) {
        :param: retrieve specific information (e.g. Cash)
 	   :return: trading account margin information
     */
-    float equity_total = 0.0;
-    float margin_total = 0.0;
     nlohmann::json resp = {};
+    float equity_total = 0.0, margin_total = 0.0;
+    
+    if (validate_account_ids()) {
+        cpr::Url url = cpr::Url{rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
 
-    validate_account_ids();
+        int interation = 0;
+        while (iteration < 2) {
+            try {
+                cpr::Response r = cpr::Get(url, session_header);
 
-    cpr::Url url = cpr::Url{rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
+                if (r.status_code != 200) { throw r;}
 
-    for (int x; x < 3; ++x) {
-        try {
-            cpr::Response r = cpr::Get(url, session_header);
+                resp = nlohmann::json::parse(r.text);
 
-            if (r.status_code != 200) { throw r;}
+                margin_total = resp["margin"];
+                equity_total = resp["netEquity"];
 
-            resp = nlohmann::json::parse(r.text);
-
-            margin_total = resp["margin"];
-            equity_total = resp["netEquity"];
-
-            if (!param.empty()) {
-                return resp[param];
+                if (!param.empty()) { return resp[param]; }
+                break;
             }
-            break;
-        }
-        catch (cpr::Response r) { 
-            BOOST_LOG_TRIVIAL(fatal) << "Margin Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            
-            if (x == 2) { std::terminate(); }
-            sleep(1);
-        }
-        catch (...) { 
-            if (x == 2) {
+            catch (cpr::Response r) { 
+                BOOST_LOG_TRIVIAL(fatal) << "Margin Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
+                if (!iteration && (r.status_code == 500 || r.status_code == 504)) { sleep(1); continue; }
+                break;
+            }
+            catch (...) { 
                 BOOST_LOG_TRIVIAL(fatal) << "Get Margin Info Uknown Failure";
-
-                std::terminate();
+                break;
             }
-            sleep(1);
+            ++iteration;
         }
     }
     // -------------------
@@ -246,28 +226,25 @@ std::map<std::string, int> GCapiClient::get_market_ids(std::vector<std::string> 
        :market_name_list: market name (e.g. USD/CAD) 
        :return: market information
     */
-    int market_id = 0;
+    if (validate_session()) {
+        for (auto const &market_name : market_name_list) {
+            try {
+                cpr::Url url = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
+                cpr::Response r = cpr::Get(url, session_header);
 
-    validate_session();
+                if (r.status_code != 200) { throw r;}
 
-    for (int x = 0; x < market_name_list.size(); ++x) {
-        std::string market_name = market_name_list[x];
-        try {
-            cpr::Url url = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
-            cpr::Response r = cpr::Get(url, session_header);
+                nlohmann::json resp = nlohmann::json::parse(r.text);
 
-            if (r.status_code != 200) { throw r;}
-
-            nlohmann::json resp = nlohmann::json::parse(r.text);
-
-            market_id = resp["Markets"][0]["MarketId"];
-            market_id_map[market_name] = market_id;
-        }
-        catch (cpr::Response r) { 
-            BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
-        }
-        catch (...) { 
-            BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Market Id for " << market_name;
+                int const market_id = resp["Markets"][0]["MarketId"];
+                market_id_map[market_name] = market_id;
+            }
+            catch (cpr::Response r) { 
+                BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
+            }
+            catch (...) { 
+                BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Market Id for " << market_name;
+            }
         }
     }
     // -------------------
@@ -282,29 +259,28 @@ std::map<std::string, std::string> GCapiClient::get_market_info(std::vector<std:
     */
     std::map<std::string, std::string> response_map = {};
 
-    validate_session();
+    if (validate_session()) {
+        for (auto const &market_name : market_name_list) {
+            try {
+                cpr::Url url = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
+                cpr::Response r = cpr::Get(url, session_header);
 
-    for (int x = 0; x < market_name_list.size(); ++x) {
-        std::string market_name = market_name_list[x];
-        try {
-            cpr::Url url = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
-            cpr::Response r = cpr::Get(url, session_header);
+                if (r.status_code != 200) { throw r;}
 
-            if (r.status_code != 200) { throw r;}
+                nlohmann::json resp = nlohmann::json::parse(r.text);
 
-            nlohmann::json resp = nlohmann::json::parse(r.text);
-
-            if (param.empty()) {
-                response_map[market_name] = resp["Markets"][0]["MarketId"].dump();
-            } else {
-                response_map[market_name] = resp["Markets"][0][param].dump();
-            }   
-        }
-        catch (cpr::Response r) { 
-            BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
-        }
-        catch (...) { 
-            BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Market Id for " << market_name;
+                if (param.empty()) {
+                    response_map[market_name] = resp["Markets"][0]["MarketId"].dump();
+                } else {
+                    response_map[market_name] = resp["Markets"][0][param].dump();
+                }   
+            }
+            catch (cpr::Response r) { 
+                BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
+            }
+            catch (...) { 
+                BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Market Id for " << market_name;
+            }
         }
     }
     // -------------------
@@ -321,59 +297,58 @@ std::map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::s
     */
     std::map<std::string, nlohmann::json> response_map = {};
 
-    validate_session();
-
-    std::transform(price_type.begin(), price_type.end(), price_type.begin(), ::toupper);
-	
-    for (int x = 0; x < market_name_list.size(); ++x) {
-        std::string market_name = market_name_list[x];
-        std::string market_id = "0";
-        if (market_id_map.count(market_name)) {
-            market_id = std::to_string(market_id_map[market_name]);
-        }
-        else { 
-            get_market_ids({market_name}); 
-            market_id = std::to_string(market_id_map[market_name]);
-        }
-
-        // ---------------------------
-        cpr::Url url;
-
-        if (from_ts != 0 && to_ts != 0) {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybetween?fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
-        }
-        else if (to_ts != 0) {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybefore?maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
-        }
-        else if (from_ts != 0) {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistoryafter?maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts) + "&priceType=" + price_type};
-        }
-        else {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type};
-        }
+    if (validate_session()) {
+        std::transform(price_type.begin(), price_type.end(), price_type.begin(), ::toupper);
         
-        for (int j = 0; j < 3; j++) {
-            try {
-                cpr::Response r = cpr::Get(url, session_header);
-
-                if (r.status_code != 200) { throw r;}
-
-                nlohmann::json resp = nlohmann::json::parse(r.text);
-
-                response_map[market_name] = resp["PriceTicks"]; 
-                break;
+        for (auto const &market_name : market_name_list) {
+            std::string market_id = "0";
+            if (market_id_map.count(market_name)) {
+                market_id = std::to_string(market_id_map[market_name]);
             }
-            catch (cpr::Response r) { 
-                if (j == 2) { response_map[market_name] = {"Error"}; }
-                BOOST_LOG_TRIVIAL(error) << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
-
-                sleep(1);
+            else { 
+                get_market_ids({market_name}); 
+                market_id = std::to_string(market_id_map[market_name]);
             }
-            catch (...) {
-                if (j == 2) { response_map[market_name] = {"Error"}; }
-                BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Price for " << market_name;
+            // ---------------------------
+            cpr::Url url;
 
-                sleep(1);
+            if (from_ts != 0 && to_ts != 0) {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybetween?fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
+            }
+            else if (to_ts != 0) {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybefore?maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
+            }
+            else if (from_ts != 0) {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistoryafter?maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts) + "&priceType=" + price_type};
+            }
+            else {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type};
+            }
+            
+            int iteration = 0;
+            while (iteration < 2) {
+                try {
+                    cpr::Response r = cpr::Get(url, session_header);
+
+                    if (r.status_code != 200) { throw r;}
+
+                    nlohmann::json resp = nlohmann::json::parse(r.text);
+
+                    response_map[market_name] = resp["PriceTicks"]; 
+                    break;
+                }
+                catch (cpr::Response r) { 
+                    BOOST_LOG_TRIVIAL(error) << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
+                    if (!iteration && (r.status_code == 500 || r.status_code == 504)) { sleep(1); continue; }
+                    response_map[market_name] = {"Error"}; 
+                    break;               
+                }
+                catch (...) {
+                    BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching Price for " << market_name;
+                    response_map[market_name] = {"Error"}; 
+                    break;
+                }
+                ++iteration;
             }
         }
     }
@@ -393,134 +368,34 @@ std::map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::str
     */
     std::map<std::string, nlohmann::json> response_map = {};
 
-    validate_session();
+    if (validate_session()) {
+        std::transform(interval.begin(), interval.end(), interval.begin(), ::toupper);
 
-    std::transform(interval.begin(), interval.end(), interval.begin(), ::toupper);
+        std::vector<int> SPAN_M = {1, 2, 3, 5, 10, 15, 30}; // Span intervals for minutes
+        std::vector<int> SPAN_H = {1, 2, 4, 8}; // Span intervals for hours
+        std::vector<std::string> INTERVAL = {"HOUR", "MINUTE", "DAY", "WEEK", "MONTH"};
 
-    std::vector<int> SPAN_M = {1, 2, 3, 5, 10, 15, 30}; // Span intervals for minutes
-    std::vector<int> SPAN_H = {1, 2, 4, 8}; // Span intervals for hours
-    std::vector<std::string> INTERVAL = {"HOUR", "MINUTE", "DAY", "WEEK", "MONTH"};
-
-    if (std::find(INTERVAL.begin(), INTERVAL.end(), interval) == INTERVAL.end()) {
-        std::cerr << "Interval Error - Provide one of the following intervals: 'HOUR', 'MINUTE', 'DAY', 'WEEK', 'MONTH'" << std::endl;
-        std::terminate();
-    }
-
-    if (interval == "HOUR") {
-        if (std::find(SPAN_H.begin(), SPAN_H.end(), span) == SPAN_H.end()) {
-            std::cerr << "Span Hour Error - Provide one of the following spans: 1, 2, 4, 8" << std::endl;
-            std::terminate();
-        }
-    }
-    else if (interval == "MINUTE") {
-        if (std::find(SPAN_M.begin(), SPAN_M.end(), span) == SPAN_M.end()) {
-            std::cerr << "Span Minute Error - Provide one of the following spans: 1, 2, 3, 5, 10, 15, 30" << std::endl;
-            std::terminate();
-        }
-    } else { span = 1; }
-
-    for (int x = 0; x < market_name_list.size(); ++x) {
-        std::string market_name = market_name_list[x];
-        std::string market_id;
-        if (market_id_map.count(market_name)) {
-            market_id = std::to_string(market_id_map[market_name]);
-        }
-        else { 
-            get_market_ids({market_name}); 
-            market_id = std::to_string(market_id_map[market_name]);
+        if (std::find(INTERVAL.begin(), INTERVAL.end(), interval) == INTERVAL.end()) {
+            BOOST_LOG_TRIVIAL(error) << "Interval Error - Provide one of the following intervals: 'HOUR', 'MINUTE', 'DAY', 'WEEK', 'MONTH'";
+            return response_map;
         }
 
-        // ---------------------------
-        cpr::Url url; 
-
-        if (from_ts != 0 && to_ts != 0) {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybetween?interval=" + interval + "&span=" + std::to_string(span) + "&fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts)};
-        }
-        else if (to_ts != 0) {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybefore?interval=" + interval + "&span=" + std::to_string(span) + "&maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts)};
-        }
-        else if (from_ts != 0) {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistoryafter?interval=" + interval + "&span=" + std::to_string(span) + "&maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts)};
-        }
-        else {
-            url = cpr::Url{rest_url + "/market/" + market_id + "/barhistory?interval=" + interval + "&span=" + std::to_string(span) + "&PriceBars=" + std::to_string(num_ticks)};
-        }
-        
-        for (int j = 0; j < 3; j++) {
-            try {
-                cpr::Response r = cpr::Get(url, session_header);
-
-                if (r.status_code != 200) { throw r;}
-
-                nlohmann::json resp = nlohmann::json::parse(r.text);
-
-                response_map[market_name] = resp["PriceBars"]; 
-                break;
-            }
-            catch (cpr::Response r) { 
-                if (j == 2) { response_map[market_name] = {"Error"}; }
-                BOOST_LOG_TRIVIAL(error) << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
-
-                sleep(1);
-            }
-            catch (...) {
-                if (j == 2) { response_map[market_name] = {"Error"}; }
-                BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching OHLC for " << market_name;
-
-                sleep(1);
+        if (interval == "HOUR") {
+            if (std::find(SPAN_H.begin(), SPAN_H.end(), span) == SPAN_H.end()) {
+                BOOST_LOG_TRIVIAL(error) << "Span Hour Error - Provide one of the following spans: 1, 2, 4, 8";
+                return response_map;
             }
         }
-    }
-    // -------------------
-    return response_map;
-}
+        else if (interval == "MINUTE") {
+            if (std::find(SPAN_M.begin(), SPAN_M.end(), span) == SPAN_M.end()) {
+                BOOST_LOG_TRIVIAL(error) << "Span Minute Error - Provide one of the following spans: 1, 2, 3, 5, 10, 15, 30";
+                return response_map;
+            }
+        } 
+        else { span = 1; }
 
-std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_map, std::string tr_account_id) {
-    /* Makes a new trade market order
-       :param trade_map: JSON object formated as in the example below
-	   :param trading_acc_id: trading account ID
-	   :return: error_list: list of symbol name that failed ot place trade
-       TRADE_MAP = {{"MARKET_NAME",{
-          {"Direction","buy/sell"},
-          {"Quantity","1000"}}
-         }} 
-    */
-    std::vector<std::string> error_list = {};
-
-    validate_account_ids();
-
-    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
-
-    std::vector<std::string> market_name_list = {};
-
-    for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) {
-        market_name_list.push_back(it.key());
-    }
-
-    int OFFSET_SECONDS = 8;
-    unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den + OFFSET_SECONDS;
-    unsigned int current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
-
-    cpr::Url url = cpr::Url{rest_url + "/order/newtradeorder"};
-
-    while (!market_name_list.empty() && current_time <= stop_time) {
-        // -----------------------
-        error_list = {};
-
-        for (int x = 0; x < market_name_list.size(); ++x) {
-            std::string market_name = market_name_list[x];
+        for (auto const &market_name : market_name_list) {
             std::string market_id;
-
-            // Check Trade Map Has Required Fields
-            if (trade_map[market_name]["Direction"].dump() == "null") {
-                std::cerr << "Direction Required for All Orders" << std::endl;
-                std::terminate();
-            }
-            if (trade_map[market_name]["Quantity"].dump() == "null") {
-                std::cerr << "Quantity Required for All Orders" << std::endl;
-                std::terminate();
-            }
-
             if (market_id_map.count(market_name)) {
                 market_id = std::to_string(market_id_map[market_name]);
             }
@@ -528,59 +403,64 @@ std::vector<std::string> GCapiClient::trade_market_order(nlohmann::json trade_ma
                 get_market_ids({market_name}); 
                 market_id = std::to_string(market_id_map[market_name]);
             }
-
-            float bid_price = get_prices({market_name},1,0,0,"BID")[market_name][0]["Price"];
-            float offer_price = get_prices({market_name},1,0,0,"ASK")[market_name][0]["Price"];
             // ---------------------------
+            cpr::Url url; 
 
-            try {
-                nlohmann::json trade_payload = {
-                    {"Direction", trade_map[market_name]["Direction"]},
-                    // {"AuditId", audit_id},
-                    {"MarketId", market_id},
-                    {"Quantity", trade_map[market_name]["Quantity"].dump()},
-                    {"MarketName", market_name},
-                    {"TradingAccountId", tr_account_id},
-                    {"OfferPrice", std::to_string(offer_price)},
-                    {"BidPrice", std::to_string(bid_price)},
-                    {"PriceTolerance", "0"}
-                };                
+            if (from_ts != 0 && to_ts != 0) {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybetween?interval=" + interval + "&span=" + std::to_string(span) + "&fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts)};
+            }
+            else if (to_ts != 0) {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybefore?interval=" + interval + "&span=" + std::to_string(span) + "&maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts)};
+            }
+            else if (from_ts != 0) {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistoryafter?interval=" + interval + "&span=" + std::to_string(span) + "&maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts)};
+            }
+            else {
+                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistory?interval=" + interval + "&span=" + std::to_string(span) + "&PriceBars=" + std::to_string(num_ticks)};
+            }
             
-                cpr::Response r = cpr::Post(url, session_header, cpr::Body(trade_payload.dump()));
+            while (iteration < 2) {
+                try {
+                    cpr::Response r = cpr::Get(url, session_header);
 
-                if (r.status_code == 200) {
+                    if (r.status_code != 200) { throw r;}
 
                     nlohmann::json resp = nlohmann::json::parse(r.text);
 
-                    BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
-                    // ---------------------------
-                    if (resp["OrderId"] == 0) { 
-                        error_list.push_back(market_name);
-                    }
-                } else {
-                     error_list.push_back(market_name);
-                     BOOST_LOG_TRIVIAL(debug) << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text;
+                    response_map[market_name] = resp["PriceBars"]; 
+                    break;
                 }
-            }
-            catch (...) { 
-                error_list.push_back(market_name);
-                BOOST_LOG_TRIVIAL(error) << "Error Placing Market Order for " << market_name;
+                catch (cpr::Response r) { 
+                    BOOST_LOG_TRIVIAL(error) << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code << "; Message: " << r.text;
+                    if (!iteration && (r.status_code == 500 || r.status_code == 504)) { sleep(1); continue; }
+                    response_map[market_name] = {"Error"};
+                    break;
+                }
+                catch (...) {
+                    BOOST_LOG_TRIVIAL(error) << "Uknown Error in Fetching OHLC for " << market_name;
+                    response_map[market_name] = {"Error"};
+                    break;
+                }
+                ++iteration;
             }
         }
-        // -----------------------
-        market_name_list = error_list;
-        current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
-        if (!market_name_list.empty()) { sleep(1); }
     }
     // -------------------
-    return error_list;
+    return response_map;
 }
 
-std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map, std::string tr_account_id) {
-    /* Makes a new trade limit order
+std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id) {
+    /* Makes a new trade order
        :param trade_map: JSON object formated as in the example below
+       :param type: Limit or Market order tpye
 	   :param trading_acc_id: trading account ID
 	   :return: error_list: list of symbol name that failed ot place trade
+       // Market Order
+       TRADE_MAP = {{"MARKET_NAME",{
+          {"Direction","buy/sell"},
+          {"Quantity","1000"}}
+         }} 
+       // Limit Order
        TRADE_MAP = {{"MARKET_NAME",{
           {"Direction","buy/sell"},
           {"Quantity","1000"},
@@ -589,115 +469,126 @@ std::vector<std::string> GCapiClient::trade_limit_order(nlohmann::json trade_map
           {'LimitPrice", "1.3521 or 0 for None"}}
          }}
     */
-
     std::vector<std::string> error_list = {};
 
-    validate_account_ids();
+    if (validate_account_ids()) {
+        if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
 
-    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+        std::vector<std::string> market_name_list = {};
+        for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) {
+            market_name_list.push_back(it.key());
+        }
 
-    std::vector<std::string> market_name_list = {};
+        std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 
-    for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) {
-        market_name_list.push_back(it.key());
-    }
+        if (type != "MARKET" && type != "LIMIT") {
+            BOOST_LOG_TRIVIAL(error) << "Trade Order Type Must Be 'MARKET' or 'LIMIT'";
+            return market_name_list;
+        }
 
-    int OFFSET_SECONDS = 8;
-    unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den + OFFSET_SECONDS;
-    unsigned int current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
+        int const OFFSET_SECONDS = 8;
+        unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den + OFFSET_SECONDS;
+        unsigned int current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
 
-    cpr::Url url = cpr::Url{rest_url + "/order/newstoplimitorder"};
+        cpr::Url url = (type == "MARKET") ? cpr::Url{rest_url + "/order/newtradeorder"} : cpr::Url{rest_url + "/order/newstoplimitorder"};
 
-    while (!market_name_list.empty() && current_time <= stop_time) {
-        // -----------------------
-        error_list = {};
+        while (!market_name_list.empty() && current_time <= stop_time) {
+            // -----------------------
+            error_list = {};
 
-        for (int x = 0; x < market_name_list.size(); ++x) {
-            std::string market_name = market_name_list[x];
-            std::string market_id;
+            for (auto const &market_name : market_name_list) {
+                std::string market_id;
+                if (market_id_map.count(market_name)) {
+                    market_id = std::to_string(market_id_map[market_name]);
+                }
+                else { 
+                    get_market_ids({market_name}); 
+                    market_id = std::to_string(market_id_map[market_name]);
+                }
 
-            // Check Trade Map Has Required Fields
-            if (trade_map[market_name]["TriggerPrice"].dump() == "null") {
-                std::cerr << "Trigger Price Required for Limit Orders" << std::endl;
-                std::terminate();
-            }
-            if (trade_map[market_name]["Direction"].dump() == "null") {
-                std::cerr << "Direction Required for All Orders" << std::endl;
-                std::terminate();
-            }
-            if (trade_map[market_name]["Quantity"].dump() == "null") {
-                std::cerr << "Quantity Required for All Orders" << std::endl;
-                std::terminate();
-            }
+                // Check Trade Map Has Required Fields
+                if (trade_map[market_name]["Direction"].dump() == "null") {
+                    BOOST_LOG_TRIVIAL(error) << market_name << " - Direction Required for All Orders";
+                    error_list.push_back(market_name);
+                    continue;
+                }
+                if (trade_map[market_name]["Quantity"].dump() == "null") {
+                    BOOST_LOG_TRIVIAL(error) << market_name << " - Quantity Required for All Orders";
+                    error_list.push_back(market_name);
+                    continue;
+                }
+                if (type == "LIMIT" && trade_map[market_name]["TriggerPrice"].dump() == "null") {
+                    std::cerr << "Trigger Price Required for Limit Orders" << std::endl;
+                    error_list.push_back(market_name);
+                    continue;
+                }
 
-            if (market_id_map.count(market_name)) {
-                market_id = std::to_string(market_id_map[market_name]);
-            }
-            else { 
-                get_market_ids({market_name}); 
-                market_id = std::to_string(market_id_map[market_name]);
-            }
-
-            float bid_price = get_prices({market_name},1,0,0,"BID")[market_name][0]["Price"];
-            float offer_price = get_prices({market_name},1,0,0,"ASK")[market_name][0]["Price"];
-            // ---------------------------
-            std::vector<nlohmann::json> if_done = {};
-
-            if (trade_map[market_name]["StopPrice"].dump() != "null") {
-                std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
-                nlohmann::json stop_order = {{"Stop",{{"TriggerPrice", trade_map[market_name]["StopPrice"].dump()}, {"Direction", opp_direction}, {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
-                if_done.push_back(stop_order);
-            }
-
-            if (trade_map[market_name]["LimitPrice"].dump() != "null") {
-                std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
-                nlohmann::json limit_order = {{"Limit",{{"TriggerPrice", trade_map[market_name]["LimitPrice"].dump()}, {"Direction", opp_direction}, {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
-                if_done.push_back(limit_order);
-            }
-
-            try {
-                nlohmann::json trade_payload = {
-                    {"Direction", trade_map[market_name]["Direction"]},
-                    // {"AuditId", audit_id},
-                    {"MarketId", market_id},
-                    {"Quantity", trade_map[market_name]["Quantity"].dump()},
-                    {"MarketName", market_name},
-                    {"TradingAccountId", tr_account_id},
-                    {"OfferPrice", std::to_string(offer_price)},
-                    {"BidPrice", std::to_string(bid_price)},
-                    {"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()},
-                    {"IfDone", if_done}
-                };               
-            
-                cpr::Response r = cpr::Post(url, session_header, cpr::Body(trade_payload.dump()));
-
-                if (r.status_code == 200) {
-
-                    nlohmann::json resp = nlohmann::json::parse(r.text);
-
-                    BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
-                    // ---------------------------
-                    if (resp["OrderId"] == 0) { 
-                        error_list.push_back(market_name);
+                float bid_price = get_prices({market_name},1,0,0,"BID")[market_name][0]["Price"];
+                float offer_price = get_prices({market_name},1,0,0,"ASK")[market_name][0]["Price"];
+                // ---------------------------
+                std::vector<nlohmann::json> if_done = {};
+                if (type == "LIMIT") {
+                    if (trade_map[market_name]["StopPrice"].dump() != "null") {
+                        std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
+                        nlohmann::json stop_order = {{"Stop",{{"TriggerPrice", trade_map[market_name]["StopPrice"].dump()}, {"Direction", opp_direction}, {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
+                        if_done.push_back(stop_order);
                     }
-                } else {
-                     error_list.push_back(market_name);
-                     BOOST_LOG_TRIVIAL(debug) << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text;
+
+                    if (trade_map[market_name]["LimitPrice"].dump() != "null") {
+                        std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
+                        nlohmann::json limit_order = {{"Limit",{{"TriggerPrice", trade_map[market_name]["LimitPrice"].dump()}, {"Direction", opp_direction}, {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
+                        if_done.push_back(limit_order);
+                    }
+                }
+
+                try {
+                    nlohmann::json trade_payload = {
+                        {"Direction", trade_map[market_name]["Direction"]},
+                        // {"AuditId", audit_id},
+                        {"MarketId", market_id},
+                        {"Quantity", trade_map[market_name]["Quantity"].dump()},
+                        {"MarketName", market_name},
+                        {"TradingAccountId", tr_account_id},
+                        {"OfferPrice", std::to_string(offer_price)},
+                        {"BidPrice", std::to_string(bid_price)},
+                    };                
+
+                    if (type == "LIMIT") { 
+                        trade_payload += {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()},{"IfDone", if_done}}
+                    } else {
+                        trade_payload += {{"PriceTolerance", "0"}};
+                    }
+                
+                    cpr::Response r = cpr::Post(url, session_header, cpr::Body(trade_payload.dump()));
+
+                    if (r.status_code == 200) {
+
+                        nlohmann::json resp = nlohmann::json::parse(r.text);
+
+                        BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
+                        // ---------------------------
+                        if (resp["OrderId"] == 0) { 
+                            error_list.push_back(market_name);
+                        }
+                    } else {
+                        error_list.push_back(market_name);
+                        BOOST_LOG_TRIVIAL(debug) << "Order Response: Status Code:" << r.status_code << "; Message:  " << r.text;
+                    }
+                }
+                catch (...) { 
+                    error_list.push_back(market_name);
+                    BOOST_LOG_TRIVIAL(error) << "Error Placing Market Order for " << market_name;
                 }
             }
-            catch (...) { 
-                error_list.push_back(market_name);
-                BOOST_LOG_TRIVIAL(error) << "Error Placing Limit Order for " << market_name;
-            }
+            // -----------------------
+            market_name_list = error_list;
+            current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
+            if (!market_name_list.empty()) { sleep(1); }
         }
-        // -----------------------
-        market_name_list = error_list;
-        current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num / std::chrono::system_clock::period::den;
-        if (!market_name_list.empty()) { sleep(1); }
     }
     // -------------------
     return error_list;
-}
+}        
 
 nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id) {
     /* List of Open Positons in Trading Account

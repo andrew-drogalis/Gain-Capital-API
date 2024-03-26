@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(GNUInstallDirs)
 
+add_compile_options(-O2 -pipe -Wall -Wextra -Wfatal-errors -Wformat-security -Wuninitialized -Wfloat-equal -g -fPIC)
+
 add_library(${PROJECT_NAME} SHARED
                 src/gain_capital_api.cpp)
 
@@ -28,6 +30,9 @@ find_package(Boost COMPONENTS program_options log log_setup REQUIRED)
 include_directories( ${Boost_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
+
+enable_testing()
+add_subdirectory(test)
 
 # Install library
 install(TARGETS ${PROJECT_NAME}

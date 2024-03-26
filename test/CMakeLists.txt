@@ -1,6 +1,8 @@
+#############################################
+# Unit tests
+
 cmake_minimum_required(VERSION 3.20)
 
-# Set the project name
 project (google_tests)
 
 # Add an library for the example classes
@@ -9,9 +11,13 @@ add_library(google_tests
     Palindrome.cpp
 )
 
-
-#############################################
-# Unit tests
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${HTTPMOCKSERVER_INCLUDE_DIRS}
+    ${CPR_INCLUDE_DIRS}
+    ${MHD_INCLUDE_DIRS}
+    ${GTEST_INCLUDE_DIRS}
+)
 
 find_package(include(GoogleTest))
 
@@ -27,20 +33,6 @@ target_link_libraries(unit_tests
     GTest::Main
 )
 
-add_test(test_all unit_tests)
-
-
-
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${HTTPMOCKSERVER_INCLUDE_DIRS}
-    ${CPR_INCLUDE_DIRS}
-    ${MHD_INCLUDE_DIRS}
-    ${GTEST_INCLUDE_DIRS}
-)
-
-add_executable(test-server test-server.cc)
-
 target_link_libraries(test-server
     ${HTTPMOCKSERVER_LIBRARIES}
     ${MHD_LIBRARIES}
@@ -49,4 +41,8 @@ target_link_libraries(test-server
     -lpthread
 )
 
-add_test(NAME test-server COMMAND test-server)
+
+add_test(test_all unit_tests)
+
+
+

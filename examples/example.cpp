@@ -50,7 +50,7 @@ int main () {
     for (string symbol : currency_pairs) {
         trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}};
     }
-    // std::vector<std::string> market_order_response = gc_api.trade_market_order(trades_map_market);
+    // std::vector<std::string> market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
@@ -62,7 +62,7 @@ int main () {
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
 
-    // std::vector<std::string> limit_order_response = gc_api.trade_limit_order(trades_map_limit);
+    // std::vector<std::string> limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
 
     // Order Management
     nlohmann::json active_order_response = gc_api.list_active_orders();

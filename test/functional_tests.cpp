@@ -1,7 +1,13 @@
-#include <gtest/gtest.h>
+// Copyright 2024, Andrew Drogalis
+// GNU License
+
+#include "gain_capital_api.h"
+
 #include <string>
-#include <httpmockserver/mock_server.h>
-#include <httpmockserver/test_environment.h>
+
+#include "gtest/gtest.h"
+#include "httpmockserver/mock_server.h"
+#include "httpmockserver/test_environment.h"
 
 
 class HTTPMock: public httpmock::MockServer {
@@ -18,7 +24,63 @@ class HTTPMock: public httpmock::MockServer {
             const std::vector<UrlArg> &urlArguments,
             const std::vector<Header> &headers)
     {
-        if (method == "POST" && matchesPrefix(url, "/example")) {
+        // Authenticate Session
+        if (method == "POST" && matchesPrefix(url, "/Session")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Validate Session
+        else if (method == "POST" && matchesPrefix(url, "/Session/validate")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Account Info
+        else if (method == "GET" && matchesPrefix(url, "/userAccount/ClientAndTradingAccount")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Margin Info
+        else if (method == "GET" && matchesPrefix(url, "/margin/clientAccountMargin?clientAccountId=TEST")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Market IDs & Market Info
+        else if (method == "GET" && matchesPrefix(url, "/cfd/markets?MarketName=TEST_MARKET")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Prices
+        else if (method == "GET" && matchesPrefix(url, "/example")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // OHLC
+        else if (method == "GET" && matchesPrefix(url, "/example")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Trade Market Order
+        else if (method == "GET" && matchesPrefix(url, "/order/newtradeorder")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Trade Limit Order
+        else if (method == "POST" && matchesPrefix(url, "/order/newstoplimitorder")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // List Open Positons
+        else if (method == "GET" && matchesPrefix(url, "/order/openpositions?TradingAccountId=TEST")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // List Active Orders
+        else if (method == "POST" && matchesPrefix(url, "/order/activeorders")) {
+            // Do something and return response
+            return Response(500, "Fake HTTP response");
+        }
+        // Cancel Order
+        else if (method == "POST" && matchesPrefix(url, "/order/cancel")) {
             // Do something and return response
             return Response(500, "Fake HTTP response");
         }
