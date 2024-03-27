@@ -25,7 +25,7 @@ This library is dependent upon the API from Gain Capital's Forex.com. To make an
 
 ### Downloading Dependencies
 
-Please see a link to required dependencies [below](#Dependencies). If you are in Linux, Boost can be installed with the following commands below. Since this repository has been built and tested on a Linux system, please open up an issue if there are any conflicts with Windows or Mac OS.
+Please see a link to required dependencies [below](#Dependencies). If you are using Linux, Boost can be installed with the following commands below.
 
 ```
     Fedora:
@@ -41,9 +41,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are in
 ```c
     #include <gain_capital_api.h>
 
-    string username = "Username";
-    string password = "Password";
-    string apikey = "ApiKey";
+    string username = "Username", password = "Password", apikey = "ApiKey";
 
     // List of Currencies to Trade
     vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};

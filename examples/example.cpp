@@ -23,10 +23,9 @@ int main () {
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 
     // Required for First Authentication
-    gc_api.authenticate_session();
+    bool success = gc_api.authenticate_session();
 
     // Get Account Information
-    // Sets Class Variable with Trading Account ID
     nlohmann::json account_response = gc_api.get_account_info();
 
     // Get Margin Information
@@ -49,7 +48,7 @@ int main () {
     for (string const &symbol : currency_pairs) {
         trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}};
     }
-    // std::vector<std::string> market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
+    std::vector<std::string> market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
@@ -60,8 +59,7 @@ int main () {
 
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
-
-    // std::vector<std::string> limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
+    std::vector<std::string> limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
 
     // Order Management
     nlohmann::json active_order_response = gc_api.list_active_orders();
