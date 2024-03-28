@@ -16,7 +16,7 @@ namespace gaincapital {
 class GCapiClient {
 
     public:
-        // User may want to access these elements
+        // User Can Access These For Their Records
         std::string trading_account_id = "";
         std::string client_account_id = "";
         std::unordered_map<std::string, int> market_id_map;
