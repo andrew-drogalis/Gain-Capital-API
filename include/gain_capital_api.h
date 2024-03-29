@@ -8,7 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
-#include "json.hpp"
+#include "json/json.hpp"
 #include "cpr/cpr.h"
 
 namespace gaincapital {

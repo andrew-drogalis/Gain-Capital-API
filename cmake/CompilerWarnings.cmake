@@ -37,11 +37,16 @@ function(
         /permissive- # standards conformance mode for MSVC compiler.
     )
   endif()
-
+  
   if("${CLANG_WARNINGS}" STREQUAL "")
+    message("CLANG WARNINGS ENABLED")
     set(CLANG_WARNINGS
         -Wall
         -Wextra # reasonable and standard
+        -Wfatal-errors
+        -Wformat-security 
+        -Wuninitialized 
+        -Wfloat-equal
         -Wshadow # warn the user if a variable declaration shadows one from a parent context
         -Wnon-virtual-dtor # warn the user if a class with virtual functions has a non-virtual destructor. This helps
         # catch hard to track down memory errors
@@ -56,10 +61,12 @@ function(
         -Wdouble-promotion # warn if float is implicit promoted to double
         -Wformat=2 # warn on security issues around functions that format output (ie printf)
         -Wimplicit-fallthrough # warn on statements that fallthrough without an explicit annotation
+        -Wlifetime
     )
   endif()
 
   if("${GCC_WARNINGS}" STREQUAL "")
+    message("GCC WARNINGS ENABLED")
     set(GCC_WARNINGS
         ${CLANG_WARNINGS}
         -Wmisleading-indentation # warn if indentation implies blocks where blocks do not exist

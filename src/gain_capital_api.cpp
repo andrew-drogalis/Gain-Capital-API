@@ -11,7 +11,7 @@
 #include <chrono>
 #include <unordered_map>
 
-#include "json.hpp"
+#include "json/json.hpp"
 #include "cpr/cpr.h"
 #include "boost/log/trivial.hpp"
 #include "boost/log/utility/setup/console.hpp"
@@ -75,7 +75,7 @@ bool GCapiClient::validate_session() {
     if (!validate_session_header()) { return false; }
 
     nlohmann::json resp = {};
-    nlohmann::json payload = {{"ClientAccountId", client_account_id},{"UserName",session_username},{"Session", session_header["Session"]},{"TradingAccountId", trading_account_id}};
+    nlohmann::json payload = {{"ClientAccountId", client_account_id},{"UserName", session_header["Username"]},{"Session", session_header["Session"]},{"TradingAccountId", trading_account_id}};
     cpr::Url url = cpr::Url{rest_url_v2 + "/Session/validate"};
 
     int iteration = 0;
@@ -142,7 +142,7 @@ nlohmann::json GCapiClient::get_account_info(std::string param) {
     cpr::Url url = cpr::Url{rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
 
     if (validate_session()) { 
-        int interation = 0;
+        int iteration = 0;
         while (iteration < 2) {
             try {
                 cpr::Response r = cpr::Get(url, session_header);
@@ -165,6 +165,7 @@ nlohmann::json GCapiClient::get_account_info(std::string param) {
                 break;
             }
             ++iteration;
+        }
     }
     // -------------------
     return resp;
@@ -174,21 +175,20 @@ nlohmann::json GCapiClient::get_margin_info(std::string param) {
     /* Gets trading account margin information
        :param: retrieve specific information (e.g. Cash)
 	   :return: trading account margin information
+        -- Example of param options
+        float margin_total = resp["margin"];
+        float equity_total = resp["netEquity"]; 
     */
     nlohmann::json resp = {};
-    float equity_total = 0.0, margin_total = 0.0;
     
     if (validate_account_ids()) {
         cpr::Url url = cpr::Url{rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
-        int interation = 0;
+        int iteration = 0;
         while (iteration < 2) {
             try {
                 cpr::Response r = cpr::Get(url, session_header);
                 if (r.status_code != 200) { throw r;}
                 resp = nlohmann::json::parse(r.text);
-
-                margin_total = resp["margin"];
-                equity_total = resp["netEquity"];
 
                 if (!param.empty()) { return resp[param]; }
                 break;
@@ -544,7 +544,7 @@ std::vector<std::string> GCapiClient::trade_order(
                     };                
 
                     if (type == "LIMIT") { 
-                        trade_payload += {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()},{"IfDone", if_done}}
+                        trade_payload += {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()},{"IfDone", if_done}};
                     } else {
                         trade_payload += {{"PriceTolerance", "0"}};
                     }
@@ -622,10 +622,10 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id) {
         cpr::Url url = cpr::Url{rest_url + "/order/activeorders"};
         nlohmann::json active_order_payload = {{"TradingAccountId",tr_account_id}, {"MaxResults", "100"}};
         int iteration = 0;
-        for (iteration < 2) {
+        while (iteration < 2) {
             try {
                 cpr::Response r = cpr::Post(url, session_header, cpr::Body{active_order_payload.dump()});
-                if (r.status_code != 200) { throw r;}
+                if (r.status_code != 200) { throw r; }
                 resp = nlohmann::json::parse(r.text);
                 resp = resp["ActiveOrders"];
                 break;
@@ -639,7 +639,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id) {
                 BOOST_LOG_TRIVIAL(fatal) << "List Active Order Failure " << resp;
                 break;
             }
-            +iteration;
+            ++iteration;
         }
     }
     // -------------------
@@ -659,7 +659,7 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
         cpr::Url url = cpr::Url{rest_url + "/order/cancel"};
         nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id},{"OrderId", order_id}};
         int iteration = 0;
-        for (iteration < 2) {
+        while (iteration < 2) {
             try {
                 cpr::Response r = cpr::Post(url, session_header, cpr::Body{cancel_order_payload.dump()});
                 if (r.status_code != 200) { throw r;}

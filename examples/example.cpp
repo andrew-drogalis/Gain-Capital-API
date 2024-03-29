@@ -8,7 +8,7 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "json.hpp"
+#include "json/json.hpp"
 
 using namespace std;
 
@@ -23,7 +23,7 @@ int main () {
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 
     // Required for First Authentication
-    bool success = gc_api.authenticate_session();
+    if (!gc_api.authenticate_session()) { return 1; }
 
     // Get Account Information
     nlohmann::json account_response = gc_api.get_account_info();
@@ -71,13 +71,13 @@ int main () {
         
         // Cancel Market Orders
         if (active_order.contains("TradeOrder")) {
-            string order_id = active_order['TradeOrder']['OrderId'];
+            string order_id = active_order["TradeOrder"]["OrderId"];
             gc_api.cancel_order(order_id);
         }
 
         // Cancel Limit Orders
         if (active_order.contains("StopLimitOrder")) {
-            string order_id = active_order['StopLimitOrder']['OrderId'];
+            string order_id = active_order["StopLimitOrder"]["OrderId"];
             gc_api.cancel_order(order_id);
         }
     }

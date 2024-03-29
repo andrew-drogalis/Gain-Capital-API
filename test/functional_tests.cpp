@@ -5,7 +5,7 @@
 
 #include <string>
 
-#include "json.hpp"
+#include "json/json.hpp"
 #include "gtest/gtest.h"
 #include "httpmockserver/mock_server.h"
 #include "httpmockserver/test_environment.h"

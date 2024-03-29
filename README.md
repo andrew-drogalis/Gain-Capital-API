@@ -54,10 +54,10 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
 ```c
     // Required for First Authentication
-    bool success = gc_api.authenticate_session();
+    if (!gc_api.authenticate_session()) { return 1; }
 
     // Authenticates Session Token if Expired
-    bool success = gc_api.validate_session();
+    if (!gc_api.validate_session()) { return 1; }
 ```
 
 
@@ -130,13 +130,13 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
         
         // Cancel Market Orders
         if (active_order.contains("TradeOrder")) {
-            string order_id = active_order['TradeOrder']['OrderId'];
+            string order_id = active_order["TradeOrder"]["OrderId"];
             gc_api.cancel_order(order_id);
         }
 
         // Cancel Limit Orders
         if (active_order.contains("StopLimitOrder")) {
-            string order_id = active_order['StopLimitOrder']['OrderId'];
+            string order_id = active_order["StopLimitOrder"]["OrderId"];
             gc_api.cancel_order(order_id);
         }
     }
