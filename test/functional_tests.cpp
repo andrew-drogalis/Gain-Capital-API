@@ -99,7 +99,7 @@ class HTTPMock: public httpmock::MockServer {
 TEST(GainCapitalFunctional, Check_All_APIs_Base_Case) {
     // Here should be implementation of test case using HTTP server.
     // HTTP requests are processed by HTTPMock::responseHandler(...)
-    const gaincapital::GCapiClient g{"TEST_USER", "TEST_PASSWORD", "TEST_APIKEY"};
+    gaincapital::GCapiClient g{"TEST_USER", "TEST_PASSWORD", "TEST_APIKEY"};
     g.set_testing_rest_urls("http://localhost:9200");
     g.authenticate_session();
     g.validate_session();
