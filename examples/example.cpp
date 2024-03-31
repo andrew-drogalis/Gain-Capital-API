@@ -3,16 +3,16 @@
 
 #include "gain_capital_api.h"
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include <unordered_map>
-
 #include "json/json.hpp"
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 using namespace std;
 
-int main () {
+int main()
+{
     // Forex.com Account Info
     string username = "BLANK", password = "BLANK", apikey = "BLANK";
 
@@ -23,7 +23,7 @@ int main () {
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 
     // Required for First Authentication
-    if (!gc_api.authenticate_session()) { return 1; }
+    if (! gc_api.authenticate_session()) { return 1; }
 
     // Get Account Information
     nlohmann::json account_response = gc_api.get_account_info();
@@ -45,14 +45,13 @@ int main () {
 
     // Place Market Order
     nlohmann::json trades_map_market = {};
-    for (string const &symbol : currency_pairs) {
-        trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}};
-    }
+    for (string const& symbol : currency_pairs) { trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}}; }
     std::vector<std::string> market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
-    for (string const &symbol : currency_pairs) {
+    for (string const& symbol : currency_pairs)
+    {
         float mid_price = price_response[symbol][0]["Price"];
         float trigger_price = mid_price * 1.1;
         float stop_price = mid_price * 0.9;
@@ -67,19 +66,21 @@ int main () {
     nlohmann::json open_position_response = gc_api.list_open_positions();
 
     // Cancel Active Orders
-    for (nlohmann::json active_order : active_order_response)  {
-        
+    for (nlohmann::json active_order : active_order_response)
+    {
+
         // Cancel Market Orders
-        if (active_order.contains("TradeOrder")) {
+        if (active_order.contains("TradeOrder"))
+        {
             string order_id = active_order["TradeOrder"]["OrderId"];
             gc_api.cancel_order(order_id);
         }
 
         // Cancel Limit Orders
-        if (active_order.contains("StopLimitOrder")) {
+        if (active_order.contains("StopLimitOrder"))
+        {
             string order_id = active_order["StopLimitOrder"]["OrderId"];
             gc_api.cancel_order(order_id);
         }
     }
-
 }

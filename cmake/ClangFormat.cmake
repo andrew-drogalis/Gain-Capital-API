@@ -4,6 +4,7 @@ function(add_clang_format_target TARGET_NAME SOURCE_DIR)
   file(GLOB FORMAT_SOURCES
        LIST_DIRECTORIES false
        "${SOURCE_DIR}/src/*.cpp"
+       "${SOURCE_DIR}/examples/*.cpp"
        "${SOURCE_DIR}/include/*.h"
   )
   add_custom_target(${TARGET_NAME}

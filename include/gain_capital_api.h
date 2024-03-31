@@ -4,12 +4,12 @@
 #ifndef GAIN_CAPITAL_API_H
 #define GAIN_CAPITAL_API_H
 
+#include "cpr/cpr.h"
+
+#include "json/json.hpp"
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "cpr/cpr.h"
-#include "json/json.hpp"
 
 namespace gaincapital
 {
@@ -20,7 +20,7 @@ class GCapiClient
   public:
     // User Can Access These For Their Records
     std::string trading_account_id = "";
-    std::string client_account_id  = "";
+    std::string client_account_id = "";
     std::unordered_map<std::string, int> market_id_map;
 
     GCapiClient();
@@ -74,12 +74,12 @@ class GCapiClient
 
   private:
     std::string rest_url_v2 = "https://ciapi.cityindex.com/v2";
-    std::string rest_url    = "https://ciapi.cityindex.com/TradingAPI";
+    std::string rest_url = "https://ciapi.cityindex.com/TradingAPI";
     cpr::Header session_header;
     nlohmann::json auth_payload;
     nlohmann::json session_payload;
 };
 
-} // namespace gaincapital
+}// namespace gaincapital
 
 #endif

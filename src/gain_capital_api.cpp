@@ -3,6 +3,11 @@
 
 #include "gain_capital_api.h"
 
+#include "boost/log/trivial.hpp"
+#include "boost/log/utility/setup/console.hpp"
+#include "cpr/cpr.h"
+
+#include "json/json.hpp"
 #include <algorithm>
 #include <chrono>
 #include <exception>
@@ -11,21 +16,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include "boost/log/trivial.hpp"
-#include "boost/log/utility/setup/console.hpp"
-#include "cpr/cpr.h"
-#include "json/json.hpp"
-
 namespace gaincapital
 {
 
-GCapiClient::GCapiClient()
-{
-}
+GCapiClient::GCapiClient() {}
 
-GCapiClient::~GCapiClient()
-{
-}
+GCapiClient::~GCapiClient() {}
 
 GCapiClient::GCapiClient(std::string username, std::string password, std::string apikey)
 {
@@ -40,12 +36,9 @@ GCapiClient::GCapiClient(std::string username, std::string password, std::string
 // =================================================================================================================
 bool GCapiClient::authenticate_session()
 {
-    cpr::Header headers = cpr::Header{{"Content-Type", "application/json"}};
+    cpr::Header headers = cpr::Header {{"Content-Type", "application/json"}};
 
-    if (!validate_auth_payload())
-    {
-        return false;
-    }
+    if (! validate_auth_payload()) { return false; }
 
     std::string url = rest_url_v2 + "/Session";
     std::string resp_session;
@@ -55,11 +48,8 @@ bool GCapiClient::authenticate_session()
     {
         try
         {
-            cpr::Response r = cpr::Post(cpr::Url{url}, headers, cpr::Body{auth_payload.dump()});
-            if (r.status_code != 200)
-            {
-                throw r;
-            }
+            cpr::Response r = cpr::Post(cpr::Url {url}, headers, cpr::Body {auth_payload.dump()});
+            if (r.status_code != 200) { throw r; }
             nlohmann::json resp = nlohmann::json::parse(r.text);
 
             if (resp["statusCode"] != 0)
@@ -73,7 +63,7 @@ bool GCapiClient::authenticate_session()
         catch (cpr::Response r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Authentication Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (!iteration && (r.status_code == 500 || r.status_code == 504))
+            if (! iteration && (r.status_code == 500 || r.status_code == 504))
             {
                 sleep(1);
                 continue;
@@ -95,40 +85,31 @@ bool GCapiClient::authenticate_session()
 bool GCapiClient::validate_session()
 {
     // Validates current session and updates if expired
-    if (!validate_session_header())
-    {
-        return false;
-    }
+    if (! validate_session_header()) { return false; }
 
-    nlohmann::json resp    = {};
+    nlohmann::json resp = {};
     nlohmann::json payload = {{"ClientAccountId", client_account_id},
                               {"UserName", session_header["Username"]},
                               {"Session", session_header["Session"]},
                               {"TradingAccountId", trading_account_id}};
-    cpr::Url url           = cpr::Url{rest_url_v2 + "/Session/validate"};
+    cpr::Url url = cpr::Url {rest_url_v2 + "/Session/validate"};
 
     int iteration = 0;
     while (iteration < 2)
     {
         try
         {
-            cpr::Response r = cpr::Post(url, session_header, cpr::Body{payload.dump()});
-            if (r.status_code != 200)
-            {
-                throw r;
-            }
+            cpr::Response r = cpr::Post(url, session_header, cpr::Body {payload.dump()});
+            if (r.status_code != 200) { throw r; }
             resp = nlohmann::json::parse(r.text);
 
-            if (resp["isAuthenticated"] == false)
-            {
-                authenticate_session();
-            }
+            if (resp["isAuthenticated"] == false) { authenticate_session(); }
             break;
         }
         catch (cpr::Response r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (!iteration && (r.status_code == 500 || r.status_code == 504))
+            if (! iteration && (r.status_code == 500 || r.status_code == 504))
             {
                 sleep(1);
                 continue;
@@ -169,22 +150,13 @@ bool GCapiClient::validate_account_ids()
 {
     if (trading_account_id == "" || client_account_id == "")
     {
-        if (get_account_info() != nlohmann::json{})
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        if (get_account_info() != nlohmann::json {}) { return true; }
+        else { return false; }
     }
     return true;
 }
 
-void GCapiClient::set_testing_rest_urls(std::string url)
-{
-    rest_url = rest_url_v2 = url;
-}
+void GCapiClient::set_testing_rest_urls(std::string url) { rest_url = rest_url_v2 = url; }
 
 // =================================================================================================================
 // API CALLS
@@ -196,7 +168,7 @@ nlohmann::json GCapiClient::get_account_info(std::string param)
        :return: trading account information
     */
     nlohmann::json resp = {};
-    cpr::Url url        = cpr::Url{rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
+    cpr::Url url = cpr::Url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
 
     if (validate_session())
     {
@@ -206,25 +178,19 @@ nlohmann::json GCapiClient::get_account_info(std::string param)
             try
             {
                 cpr::Response r = cpr::Get(url, session_header);
-                if (r.status_code != 200)
-                {
-                    throw r;
-                }
+                if (r.status_code != 200) { throw r; }
                 resp = nlohmann::json::parse(r.text);
 
                 trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
-                client_account_id  = resp["tradingAccounts"][0]["clientAccountId"].dump();
+                client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
 
-                if (!param.empty())
-                {
-                    return resp["tradingAccounts"][0][param];
-                }
+                if (! param.empty()) { return resp["tradingAccounts"][0][param]; }
                 break;
             }
             catch (cpr::Response r)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Account Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
-                if (!iteration && (r.status_code == 500 || r.status_code == 504))
+                if (! iteration && (r.status_code == 500 || r.status_code == 504))
                 {
                     sleep(1);
                     continue;
@@ -256,29 +222,23 @@ nlohmann::json GCapiClient::get_margin_info(std::string param)
 
     if (validate_account_ids())
     {
-        cpr::Url url  = cpr::Url{rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
+        cpr::Url url = cpr::Url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
         int iteration = 0;
         while (iteration < 2)
         {
             try
             {
                 cpr::Response r = cpr::Get(url, session_header);
-                if (r.status_code != 200)
-                {
-                    throw r;
-                }
+                if (r.status_code != 200) { throw r; }
                 resp = nlohmann::json::parse(r.text);
 
-                if (!param.empty())
-                {
-                    return resp[param];
-                }
+                if (! param.empty()) { return resp[param]; }
                 break;
             }
             catch (cpr::Response r)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Margin Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
-                if (!iteration && (r.status_code == 500 || r.status_code == 504))
+                if (! iteration && (r.status_code == 500 || r.status_code == 504))
                 {
                     sleep(1);
                     continue;
@@ -305,19 +265,16 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std
     */
     if (validate_session())
     {
-        for (auto const &market_name : market_name_list)
+        for (auto const& market_name : market_name_list)
         {
             try
             {
-                cpr::Url url    = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
+                cpr::Url url = cpr::Url {rest_url + "/cfd/markets?MarketName=" + market_name};
                 cpr::Response r = cpr::Get(url, session_header);
-                if (r.status_code != 200)
-                {
-                    throw r;
-                }
+                if (r.status_code != 200) { throw r; }
                 nlohmann::json resp = nlohmann::json::parse(r.text);
 
-                int const market_id        = resp["Markets"][0]["MarketId"];
+                int const market_id = resp["Markets"][0]["MarketId"];
                 market_id_map[market_name] = market_id;
             }
             catch (cpr::Response r)
@@ -346,26 +303,17 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
 
     if (validate_session())
     {
-        for (auto const &market_name : market_name_list)
+        for (auto const& market_name : market_name_list)
         {
             try
             {
-                cpr::Url url    = cpr::Url{rest_url + "/cfd/markets?MarketName=" + market_name};
+                cpr::Url url = cpr::Url {rest_url + "/cfd/markets?MarketName=" + market_name};
                 cpr::Response r = cpr::Get(url, session_header);
-                if (r.status_code != 200)
-                {
-                    throw r;
-                }
+                if (r.status_code != 200) { throw r; }
                 nlohmann::json resp = nlohmann::json::parse(r.text);
 
-                if (param.empty())
-                {
-                    response_map[market_name] = resp["Markets"][0]["MarketId"].dump();
-                }
-                else
-                {
-                    response_map[market_name] = resp["Markets"][0][param].dump();
-                }
+                if (param.empty()) { response_map[market_name] = resp["Markets"][0]["MarketId"].dump(); }
+                else { response_map[market_name] = resp["Markets"][0][param].dump(); }
             }
             catch (cpr::Response r)
             {
@@ -398,13 +346,10 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
     {
         std::transform(price_type.begin(), price_type.end(), price_type.begin(), ::toupper);
 
-        for (auto const &market_name : market_name_list)
+        for (auto const& market_name : market_name_list)
         {
             std::string market_id = "0";
-            if (market_id_map.count(market_name))
-            {
-                market_id = std::to_string(market_id_map[market_name]);
-            }
+            if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
             else
             {
                 get_market_ids({market_name});
@@ -414,23 +359,23 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
             cpr::Url url;
             if (from_ts != 0 && to_ts != 0)
             {
-                url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybetween?fromTimeStampUTC=" + std::to_string(from_ts) +
-                               "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistorybetween?fromTimeStampUTC=" + std::to_string(from_ts) +
+                                "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
             }
             else if (to_ts != 0)
             {
-                url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistorybefore?maxResults=" + std::to_string(num_ticks) +
-                               "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistorybefore?maxResults=" + std::to_string(num_ticks) +
+                                "&toTimestampUTC=" + std::to_string(to_ts) + "&priceType=" + price_type};
             }
             else if (from_ts != 0)
             {
-                url = cpr::Url{rest_url + "/market/" + market_id + "/tickhistoryafter?maxResults=" + std::to_string(num_ticks) +
-                               "&fromTimestampUTC=" + std::to_string(from_ts) + "&priceType=" + price_type};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistoryafter?maxResults=" + std::to_string(num_ticks) +
+                                "&fromTimestampUTC=" + std::to_string(from_ts) + "&priceType=" + price_type};
             }
             else
             {
-                url =
-                    cpr::Url{rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) +
+                                "&priceType=" + price_type};
             }
             int iteration = 0;
             while (iteration < 2)
@@ -438,10 +383,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
                 try
                 {
                     cpr::Response r = cpr::Get(url, session_header);
-                    if (r.status_code != 200)
-                    {
-                        throw r;
-                    }
+                    if (r.status_code != 200) { throw r; }
                     nlohmann::json resp = nlohmann::json::parse(r.text);
 
                     response_map[market_name] = resp["PriceTicks"];
@@ -451,7 +393,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
                 {
                     BOOST_LOG_TRIVIAL(error) << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code
                                              << "; Message: " << r.text;
-                    if (!iteration && (r.status_code == 500 || r.status_code == 504))
+                    if (! iteration && (r.status_code == 500 || r.status_code == 504))
                     {
                         sleep(1);
                         continue;
@@ -490,8 +432,8 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
     {
         std::transform(interval.begin(), interval.end(), interval.begin(), ::toupper);
 
-        std::vector<int> SPAN_M           = {1, 2, 3, 5, 10, 15, 30}; // Span intervals for minutes
-        std::vector<int> SPAN_H           = {1, 2, 4, 8};             // Span intervals for hours
+        std::vector<int> SPAN_M = {1, 2, 3, 5, 10, 15, 30};// Span intervals for minutes
+        std::vector<int> SPAN_H = {1, 2, 4, 8};            // Span intervals for hours
         std::vector<std::string> INTERVAL = {"HOUR", "MINUTE", "DAY", "WEEK", "MONTH"};
 
         if (std::find(INTERVAL.begin(), INTERVAL.end(), interval) == INTERVAL.end())
@@ -518,18 +460,12 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
                 return response_map;
             }
         }
-        else
-        {
-            span = 1;
-        }
+        else { span = 1; }
 
-        for (auto const &market_name : market_name_list)
+        for (auto const& market_name : market_name_list)
         {
             std::string market_id;
-            if (market_id_map.count(market_name))
-            {
-                market_id = std::to_string(market_id_map[market_name]);
-            }
+            if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
             else
             {
                 get_market_ids({market_name});
@@ -539,23 +475,23 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
             cpr::Url url;
             if (from_ts != 0 && to_ts != 0)
             {
-                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybetween?interval=" + interval + "&span=" + std::to_string(span) +
-                               "&fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts)};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/barhistorybetween?interval=" + interval + "&span=" + std::to_string(span) +
+                                "&fromTimeStampUTC=" + std::to_string(from_ts) + "&toTimestampUTC=" + std::to_string(to_ts)};
             }
             else if (to_ts != 0)
             {
-                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistorybefore?interval=" + interval + "&span=" + std::to_string(span) +
-                               "&maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts)};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/barhistorybefore?interval=" + interval + "&span=" + std::to_string(span) +
+                                "&maxResults=" + std::to_string(num_ticks) + "&toTimestampUTC=" + std::to_string(to_ts)};
             }
             else if (from_ts != 0)
             {
-                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistoryafter?interval=" + interval + "&span=" + std::to_string(span) +
-                               "&maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts)};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/barhistoryafter?interval=" + interval + "&span=" + std::to_string(span) +
+                                "&maxResults=" + std::to_string(num_ticks) + "&fromTimestampUTC=" + std::to_string(from_ts)};
             }
             else
             {
-                url = cpr::Url{rest_url + "/market/" + market_id + "/barhistory?interval=" + interval + "&span=" + std::to_string(span) +
-                               "&PriceBars=" + std::to_string(num_ticks)};
+                url = cpr::Url {rest_url + "/market/" + market_id + "/barhistory?interval=" + interval + "&span=" + std::to_string(span) +
+                                "&PriceBars=" + std::to_string(num_ticks)};
             }
             int iteration = 0;
             while (iteration < 2)
@@ -563,10 +499,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
                 try
                 {
                     cpr::Response r = cpr::Get(url, session_header);
-                    if (r.status_code != 200)
-                    {
-                        throw r;
-                    }
+                    if (r.status_code != 200) { throw r; }
                     nlohmann::json resp = nlohmann::json::parse(r.text);
 
                     response_map[market_name] = resp["PriceBars"];
@@ -576,7 +509,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
                 {
                     BOOST_LOG_TRIVIAL(error) << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code
                                              << "; Message: " << r.text;
-                    if (!iteration && (r.status_code == 500 || r.status_code == 504))
+                    if (! iteration && (r.status_code == 500 || r.status_code == 504))
                     {
                         sleep(1);
                         continue;
@@ -623,16 +556,10 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
 
     if (validate_account_ids())
     {
-        if (tr_account_id.empty())
-        {
-            tr_account_id = trading_account_id;
-        }
+        if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
 
         std::vector<std::string> market_name_list = {};
-        for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it)
-        {
-            market_name_list.push_back(it.key());
-        }
+        for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) { market_name_list.push_back(it.key()); }
 
         std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 
@@ -643,26 +570,23 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
         }
 
         int const OFFSET_SECONDS = 8;
-        unsigned int stop_time   = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
+        unsigned int stop_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
                                      std::chrono::system_clock::period::den +
                                  OFFSET_SECONDS;
         unsigned int current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
                                     std::chrono::system_clock::period::den;
 
-        cpr::Url url = (type == "MARKET") ? cpr::Url{rest_url + "/order/newtradeorder"} : cpr::Url{rest_url + "/order/newstoplimitorder"};
+        cpr::Url url = (type == "MARKET") ? cpr::Url {rest_url + "/order/newtradeorder"} : cpr::Url {rest_url + "/order/newstoplimitorder"};
 
-        while (!market_name_list.empty() && current_time <= stop_time)
+        while (! market_name_list.empty() && current_time <= stop_time)
         {
             // -----------------------
             error_list = {};
 
-            for (auto const &market_name : market_name_list)
+            for (auto const& market_name : market_name_list)
             {
                 std::string market_id;
-                if (market_id_map.count(market_name))
-                {
-                    market_id = std::to_string(market_id_map[market_name]);
-                }
+                if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
                 else
                 {
                     get_market_ids({market_name});
@@ -689,7 +613,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                     continue;
                 }
 
-                float bid_price   = get_prices({market_name}, 1, 0, 0, "BID")[market_name][0]["Price"];
+                float bid_price = get_prices({market_name}, 1, 0, 0, "BID")[market_name][0]["Price"];
                 float offer_price = get_prices({market_name}, 1, 0, 0, "ASK")[market_name][0]["Price"];
                 // ---------------------------
                 std::vector<nlohmann::json> if_done = {};
@@ -707,7 +631,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
 
                     if (trade_map[market_name]["LimitPrice"].dump() != "null")
                     {
-                        std::string opp_direction  = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
+                        std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
                         nlohmann::json limit_order = {{"Limit",
                                                        {{"TriggerPrice", trade_map[market_name]["LimitPrice"].dump()},
                                                         {"Direction", opp_direction},
@@ -729,14 +653,8 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                         {"BidPrice", std::to_string(bid_price)},
                     };
 
-                    if (type == "LIMIT")
-                    {
-                        trade_payload += {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()}, {"IfDone", if_done}};
-                    }
-                    else
-                    {
-                        trade_payload += {{"PriceTolerance", "0"}};
-                    }
+                    if (type == "LIMIT") { trade_payload += {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()}, {"IfDone", if_done}}; }
+                    else { trade_payload += {{"PriceTolerance", "0"}}; }
                     cpr::Response r = cpr::Post(url, session_header, cpr::Body(trade_payload.dump()));
                     if (r.status_code == 200)
                     {
@@ -744,10 +662,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
 
                         BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
                         // ---------------------------
-                        if (resp["OrderId"] == 0)
-                        {
-                            error_list.push_back(market_name);
-                        }
+                        if (resp["OrderId"] == 0) { error_list.push_back(market_name); }
                     }
                     else
                     {
@@ -763,12 +678,9 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
             }
             // -----------------------
             market_name_list = error_list;
-            current_time     = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
+            current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
                            std::chrono::system_clock::period::den;
-            if (!market_name_list.empty())
-            {
-                sleep(1);
-            }
+            if (! market_name_list.empty()) { sleep(1); }
         }
     }
     // -------------------
@@ -785,21 +697,15 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
 
     if (validate_account_ids())
     {
-        if (tr_account_id.empty())
-        {
-            tr_account_id = trading_account_id;
-        }
-        cpr::Url url  = cpr::Url{rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
+        if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+        cpr::Url url = cpr::Url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
         int iteration = 0;
         while (iteration < 2)
         {
             try
             {
                 cpr::Response r = cpr::Get(url, session_header);
-                if (r.status_code != 200)
-                {
-                    throw r;
-                }
+                if (r.status_code != 200) { throw r; }
                 resp = nlohmann::json::parse(r.text);
                 resp = resp["OpenPositions"];
                 break;
@@ -807,7 +713,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
             catch (cpr::Response r)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Open Positions Error - Status Code: " << r.status_code << "; Message: " << r.text;
-                if (!iteration && (r.status_code == 500 || r.status_code == 504))
+                if (! iteration && (r.status_code == 500 || r.status_code == 504))
                 {
                     sleep(1);
                     continue;
@@ -836,22 +742,16 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
 
     if (validate_account_ids())
     {
-        if (tr_account_id.empty())
-        {
-            tr_account_id = trading_account_id;
-        }
-        cpr::Url url                        = cpr::Url{rest_url + "/order/activeorders"};
+        if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+        cpr::Url url = cpr::Url {rest_url + "/order/activeorders"};
         nlohmann::json active_order_payload = {{"TradingAccountId", tr_account_id}, {"MaxResults", "100"}};
-        int iteration                       = 0;
+        int iteration = 0;
         while (iteration < 2)
         {
             try
             {
-                cpr::Response r = cpr::Post(url, session_header, cpr::Body{active_order_payload.dump()});
-                if (r.status_code != 200)
-                {
-                    throw r;
-                }
+                cpr::Response r = cpr::Post(url, session_header, cpr::Body {active_order_payload.dump()});
+                if (r.status_code != 200) { throw r; }
                 resp = nlohmann::json::parse(r.text);
                 resp = resp["ActiveOrders"];
                 break;
@@ -859,7 +759,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
             catch (cpr::Response r)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Active Orders Error - Status Code: " << r.status_code << "; Message: " << r.text;
-                if (!iteration && (r.status_code == 500 || r.status_code == 504))
+                if (! iteration && (r.status_code == 500 || r.status_code == 504))
                 {
                     sleep(1);
                     continue;
@@ -889,29 +789,23 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
 
     if (validate_account_ids())
     {
-        if (tr_account_id.empty())
-        {
-            tr_account_id = trading_account_id;
-        }
-        cpr::Url url                        = cpr::Url{rest_url + "/order/cancel"};
+        if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+        cpr::Url url = cpr::Url {rest_url + "/order/cancel"};
         nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id}, {"OrderId", order_id}};
-        int iteration                       = 0;
+        int iteration = 0;
         while (iteration < 2)
         {
             try
             {
-                cpr::Response r = cpr::Post(url, session_header, cpr::Body{cancel_order_payload.dump()});
-                if (r.status_code != 200)
-                {
-                    throw r;
-                }
+                cpr::Response r = cpr::Post(url, session_header, cpr::Body {cancel_order_payload.dump()});
+                if (r.status_code != 200) { throw r; }
                 resp = nlohmann::json::parse(r.text);
                 break;
             }
             catch (cpr::Response r)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Cancel Order Error - Status Code: " << r.status_code << "; Message: " << r.text;
-                if (!iteration && (r.status_code == 500 || r.status_code == 504))
+                if (! iteration && (r.status_code == 500 || r.status_code == 504))
                 {
                     sleep(1);
                     continue;
@@ -930,4 +824,4 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
     return resp;
 }
 
-} // namespace gaincapital
+}// namespace gaincapital
