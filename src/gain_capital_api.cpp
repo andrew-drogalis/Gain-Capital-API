@@ -263,6 +263,7 @@ nlohmann::json GCapiClient::get_margin_info(std::string param)
     if (validate_session())
     {
         cpr::Url url = cpr::Url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
+        
         int iteration = 0;
         while (iteration < 2)
         {
