@@ -372,7 +372,7 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> market_name_list, int num_ticks,
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> market_name_list, unsigned int num_ticks,
                                                                         long unsigned int from_ts, long unsigned int to_ts, std::string price_type)
 {
     /* Get prices
@@ -387,6 +387,12 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
     if (validate_session())
     {
         std::transform(price_type.begin(), price_type.end(), price_type.begin(), ::toupper);
+
+        if (price_type != "BID" && price_type != "ASK" && price_type != "MID")
+        {
+            BOOST_LOG_TRIVIAL(error) << "Price Type Error - Provide one of the following price types: 'ASK', 'BID', 'MID'";
+            return response_map;
+        }
 
         for (auto const& market_name : market_name_list)
         {
@@ -458,8 +464,8 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, std::string interval, int num_ticks,
-                                                                      int span, long unsigned int from_ts, long unsigned int to_ts)
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, std::string interval, unsigned int num_ticks,
+                                                                      unsigned int span, long unsigned int from_ts, long unsigned int to_ts)
 {
     /* Get the open, high, low, close of a specific market_id
            :param market_name_list: market name (e.g. USD/CAD)
