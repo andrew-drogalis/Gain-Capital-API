@@ -81,6 +81,46 @@ bool GCapiClient::authenticate_session()
     }
     // ---------------------------
     session_header = {{"Content-Type", "application/json"}, {"UserName", auth_payload["UserName"]}, {"Session", resp_session}};
+    if (! set_trading_account_id()) { return false; }
+    return true;
+}
+
+bool GCapiClient::set_trading_account_id()
+{
+    cpr::Url url = cpr::Url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
+
+    int iteration = 0;
+    while (iteration < 2)
+    {
+        try
+        {
+            cpr::Response r = cpr::Get(url, session_header);
+            if (r.status_code != 200) { throw r; }
+            nlohmann::json resp = nlohmann::json::parse(r.text);
+
+            trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
+            client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
+
+            return true;
+        }
+        catch (cpr::Response r)
+        {
+            BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account Error - Status Code: " << r.status_code << "; Message: " << r.text;
+            if (! iteration && (r.status_code == 500 || r.status_code == 504))
+            {
+                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
+                sleep(1);
+                continue;
+            }
+            return false;
+        }
+        catch (...)
+        {
+            BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account - Unknown Failure";
+            return false;
+        }
+        ++iteration;
+    }
     return true;
 }
 
@@ -151,11 +191,7 @@ bool GCapiClient::validate_auth_payload()
 
 bool GCapiClient::validate_account_ids()
 {
-    if (trading_account_id == "" || client_account_id == "")
-    {
-        if (get_account_info() != nlohmann::json {}) { return true; }
-        else { return false; }
-    }
+    if (trading_account_id == "" || client_account_id == "") { return false; }
     return true;
 }
 
@@ -224,7 +260,7 @@ nlohmann::json GCapiClient::get_margin_info(std::string param)
     */
     nlohmann::json resp = {};
 
-    if (validate_account_ids())
+    if (validate_session())
     {
         cpr::Url url = cpr::Url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
         int iteration = 0;
@@ -561,7 +597,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
     */
     std::vector<std::string> error_list = {};
 
-    if (validate_account_ids())
+    if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
 
@@ -699,7 +735,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
     */
     nlohmann::json resp = {};
 
-    if (validate_account_ids())
+    if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
         cpr::Url url = cpr::Url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
@@ -744,7 +780,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
     */
     nlohmann::json resp = {};
 
-    if (validate_account_ids())
+    if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
         
@@ -792,7 +828,7 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
     */
     nlohmann::json resp = {};
 
-    if (validate_account_ids())
+    if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
         

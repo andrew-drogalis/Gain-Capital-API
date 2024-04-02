@@ -46,15 +46,37 @@ cmake_path(GET CMAKE_CURRENT_SOURCE_DIR PARENT_PATH PARENT_DIR)
 # Add a testing executable
 add_executable(unit_tests 
     unit_tests.cpp
-    functional_tests.cpp
-    ${PARENT_DIR}/src/gain_capital_api.cpp
-    ${PARENT_DIR}/src/httpmockserver/mock_server.cc)
+    ${PARENT_DIR}/src/gain_capital_api.cpp)
 
 target_include_directories(unit_tests PRIVATE ${PARENT_DIR}/include)
 
 target_link_libraries(unit_tests PRIVATE cpr::cpr)
 
-target_link_libraries(unit_tests LINK_PUBLIC ${Boost_LIBRARIES} GTest::GTest GTest::Main ${HTTPMOCKSERVER_LIBRARIES} ${MHD_LIBRARIES})
+target_link_libraries(unit_tests LINK_PUBLIC ${Boost_LIBRARIES} GTest::GTest GTest::Main)
+
+# Add a testing executable
+add_executable(functional_tests_correct
+    functional_tests_correct_server.cpp
+    ${PARENT_DIR}/src/gain_capital_api.cpp
+    ${PARENT_DIR}/src/httpmockserver/mock_server.cc)
+
+target_include_directories(functional_tests_correct PRIVATE ${PARENT_DIR}/include)
+
+target_link_libraries(functional_tests_correct PRIVATE cpr::cpr)
+
+target_link_libraries(functional_tests_correct LINK_PUBLIC ${Boost_LIBRARIES} GTest::GTest GTest::Main ${HTTPMOCKSERVER_LIBRARIES} ${MHD_LIBRARIES})
+
+# Add a testing executable
+add_executable(functional_tests_failed
+    functional_tests_failed_server.cpp
+    ${PARENT_DIR}/src/gain_capital_api.cpp
+    ${PARENT_DIR}/src/httpmockserver/mock_server.cc)
+
+target_include_directories(functional_tests_failed PRIVATE ${PARENT_DIR}/include)
+
+target_link_libraries(functional_tests_failed PRIVATE cpr::cpr)
+
+target_link_libraries(functional_tests_failed LINK_PUBLIC ${Boost_LIBRARIES} GTest::GTest GTest::Main ${HTTPMOCKSERVER_LIBRARIES} ${MHD_LIBRARIES})
 
 # we cannot analyse results without gcov
 find_program(GCOV_PATH gcov)
@@ -62,5 +84,8 @@ if(NOT GCOV_PATH)
   message(FATAL_ERROR "Code coverage analysis requires gcov!")
 endif()
 
-add_test(test_all unit_tests)
+include(GoogleTest)
+gtest_discover_tests(unit_tests)
+gtest_discover_tests(functional_tests_correct)
+gtest_discover_tests(functional_tests_failed)
 

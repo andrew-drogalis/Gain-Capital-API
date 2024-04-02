@@ -4,6 +4,7 @@
 #include "gain_capital_api.h"
 
 #include <string>
+#include <iostream>
 
 #include "json/json.hpp"
 #include "gtest/gtest.h"
@@ -28,7 +29,7 @@ class HTTPMock: public httpmock::MockServer {
         // Authenticate Session
         if (method == "POST" && matchesPrefix(url, "/Session")) {
             
-            return Response(500, "Fake HTTP response");
+            return Response(200, "{\"statusCode\": 0, \"session\": \"123\"}");
         }
         // Validate Session
         else if (method == "POST" && matchesPrefix(url, "/Session/validate")) {
@@ -99,11 +100,13 @@ class HTTPMock: public httpmock::MockServer {
 TEST(GainCapitalFunctional, Check_All_APIs_Base_Case) {
     // Here should be implementation of test case using HTTP server.
     // HTTP requests are processed by HTTPMock::responseHandler(...)
-    gaincapital::GCapiClient g{"TEST_USER", "TEST_PASSWORD", "TEST_APIKEY"};
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
-    g.validate_session();
 
+    
+    // g.validate_session();
+
+    EXPECT_EQ(g.authenticate_session(), true);
 }
 
 

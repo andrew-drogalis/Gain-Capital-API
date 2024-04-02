@@ -78,6 +78,8 @@ class GCapiClient
     cpr::Header session_header;
     nlohmann::json auth_payload;
     nlohmann::json session_payload;
+
+    bool set_trading_account_id();
 };
 
 }// namespace gaincapital
