@@ -128,14 +128,14 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
         // Cancel Market Orders
         if (active_order.contains("TradeOrder")) 
         {
-            string order_id = active_order["TradeOrder"]["OrderId"];
+            string order_id = active_order["TradeOrder"]["OrderId"].dump();
             gc_api.cancel_order(order_id);
         }
 
         // Cancel Limit Orders
         if (active_order.contains("StopLimitOrder")) 
         {
-            string order_id = active_order["StopLimitOrder"]["OrderId"];
+            string order_id = active_order["StopLimitOrder"]["OrderId"].dump();
             gc_api.cancel_order(order_id);
         }
     }

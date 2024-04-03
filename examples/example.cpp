@@ -52,14 +52,14 @@ int main()
     nlohmann::json trades_map_limit = {};
     for (string const& symbol : currency_pairs)
     {
-        float mid_price = price_response[symbol][0]["Price"];
+        float mid_price = static_cast<float>(price_response[symbol][0]["Price"]);
         float trigger_price = mid_price * 1.1;
         float stop_price = mid_price * 0.9;
 
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
     std::vector<std::string> limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
-
+   
     // Order Management
     nlohmann::json active_order_response = gc_api.list_active_orders();
 
@@ -68,18 +68,17 @@ int main()
     // Cancel Active Orders
     for (nlohmann::json active_order : active_order_response)
     {
-
         // Cancel Market Orders
         if (active_order.contains("TradeOrder"))
         {
-            string order_id = active_order["TradeOrder"]["OrderId"];
+            string order_id = active_order["TradeOrder"]["OrderId"].dump();
             gc_api.cancel_order(order_id);
         }
 
         // Cancel Limit Orders
         if (active_order.contains("StopLimitOrder"))
         {
-            string order_id = active_order["StopLimitOrder"]["OrderId"];
+            string order_id = active_order["StopLimitOrder"]["OrderId"].dump();
             gc_api.cancel_order(order_id);
         }
     }

@@ -53,7 +53,7 @@ bool GCapiClient::authenticate_session()
             if (r.status_code != 200) { throw r; }
             nlohmann::json resp = nlohmann::json::parse(r.text);
 
-            if (resp["statusCode"] != 0)
+            if (static_cast<int>(resp["statusCode"]) != 0)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Response is Valid, but Gain Capital Status Code Error: " << resp["statusCode"];
                 return false;
@@ -317,7 +317,7 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std
                 if (r.status_code != 200) { throw r; }
                 nlohmann::json resp = nlohmann::json::parse(r.text);
 
-                int const market_id = resp["Markets"][0]["MarketId"];
+                int const market_id = static_cast<int>(resp["Markets"][0]["MarketId"]);
                 market_id_map[market_name] = market_id;
             }
             catch (cpr::Response r)
@@ -661,8 +661,8 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                 float bid_price, offer_price;
                 try
                 {
-                    bid_price = get_prices({market_name}, 1, 0, 0, "BID")[market_name][0]["Price"];
-                    offer_price = get_prices({market_name}, 1, 0, 0, "ASK")[market_name][0]["Price"];
+                    bid_price = static_cast<float>(get_prices({market_name}, 1, 0, 0, "BID")[market_name][0]["Price"]);
+                    offer_price = static_cast<float>(get_prices({market_name}, 1, 0, 0, "ASK")[market_name][0]["Price"]);
                 }
                 catch( ... )
                 {
@@ -726,7 +726,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                         // Set Logging to 'Info' to suppress output.
                         BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
                         // ---------------------------
-                        if (resp["OrderId"] == 0) { error_list.push_back(market_name); }
+                        if (static_cast<int>(resp["OrderId"]) == 0) { error_list.push_back(market_name); }
                     }
                     else
                     {
