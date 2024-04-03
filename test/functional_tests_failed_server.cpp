@@ -39,7 +39,7 @@ class HTTPMock: public httpmock::MockServer {
         // Account Info
         else if (method == "GET" && matchesPrefix(url, "/userAccount/ClientAndTradingAccount")) {
             
-            return Response(200, "{\"tradingAccounts\": [{\"tradingAccountId\":\"TradingTestID\", \"clientAccountId\":\"ClientTestID\",\"SampleParam\":\"123\"}]}");
+            return Response(400, "{\"tradingAccounts\": [{\"tradingAccountId\":\"TradingTestID\", \"clientAccountId\":\"ClientTestID\",\"SampleParam\":\"123\"}]}");
         }
         // Margin Info
         else if (method == "GET" && matchesMargin(url, "/margin/clientAccountMargin")) {
@@ -49,12 +49,12 @@ class HTTPMock: public httpmock::MockServer {
         // Market IDs & Market Info
         else if (method == "GET" && matchesMarkets(url, "/cfd/markets")) {
             
-            return Response(200, "{\"Markets\": [{\"MarketId\": 123,\"SampleParam\":\"123\"}]}");
+            return Response(400, "{\"Markets\": [{\"MarketId\": 123,\"SampleParam\":\"123\"}]}");
         }
         // Prices
         else if (method == "GET" && matchesPrices(url, "/market/123/tickhistory")) {
             
-            return Response(400, "{\"PriceTicks\": \"123\"}");
+            return Response(400, "{\"PriceTicks\":[{\"Price\" : 1.0}]}");
         }
         // OHLC
         else if (method == "GET" && matchesOHLC(url, "/market/123/barhistory")) {
@@ -96,28 +96,28 @@ class HTTPMock: public httpmock::MockServer {
     }
     
     bool matchesMargin(const std::string &url, const std::string &str) const {
-        return url.substr(0, 50) == str.substr(0, 50);
+        return url.substr(0, 27) == str.substr(0, 27);
     }
 
     bool matchesMarkets(const std::string &url, const std::string &str) const {
-        return url.substr(0, 35) == str.substr(0, 35);
+        return url.substr(0, 12) == str.substr(0, 12);
     }
 
     bool matchesOpenPositions(const std::string &url, const std::string &str) const {
-        return url.substr(0, 43) == str.substr(0, 43);
+        return url.substr(0, 20) == str.substr(0, 20);
     }
 
     bool matchesPrices(const std::string &url, const std::string &str) const {
-        return url.substr(0, 54) == str.substr(0, 54);
+        return url.substr(0, 23) == str.substr(0, 23);
     }
 
     bool matchesOHLC(const std::string &url, const std::string &str) const {
-        return url.substr(0, 53) == str.substr(0, 53);
+        return url.substr(0, 22) == str.substr(0, 22);
     }
 };
 
 
-TEST(GainCapitalFunctional, Check_All_APIs_Base_Case) {
+TEST(GainCapitalFunctional, AuthenticateSessionFailedServerTest) {
     // Here should be implementation of test case using HTTP server.
     // HTTP requests are processed by HTTPMock::responseHandler(...)
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
@@ -126,6 +126,110 @@ TEST(GainCapitalFunctional, Check_All_APIs_Base_Case) {
     EXPECT_EQ(g.authenticate_session(), false);
 }
 
+TEST(GainCapitalFunctional, GetAccountInfoFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    nlohmann::json response{};
+
+    EXPECT_EQ(g.get_account_info(), response);
+}
+
+TEST(GainCapitalFunctional, GetMarginInfoFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    nlohmann::json response{};
+
+    EXPECT_EQ(g.get_margin_info("SampleParam"), response);
+}
+
+TEST(GainCapitalFunctional, GetMarketIDsFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    std::unordered_map<std::string, int> response = {};
+
+    EXPECT_EQ(g.get_market_ids({"USD/CAD"}), response);
+}
+
+TEST(GainCapitalFunctional, GetMarketInfoFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    std::unordered_map<std::string, std::string> response = {};
+
+    EXPECT_EQ(g.get_market_info({"USD/CAD"}, "SampleParam"), response);
+}
+
+
+TEST(GainCapitalFunctional, GetPricesFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    std::unordered_map<std::string, nlohmann::json> response = {};
+
+    EXPECT_EQ(g.get_prices({"TEST_MARKET"}), response);
+}
+
+TEST(GainCapitalFunctional, GetOHLCFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    std::unordered_map<std::string, nlohmann::json> response = {};
+
+    EXPECT_EQ(g.get_ohlc({"TEST_MARKET"}, "MINUTE"), response);
+}
+
+TEST(GainCapitalFunctional, TradeOrderFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    std::vector<std::string> response{"TEST_MARKET"};
+
+    nlohmann::json trades_map_limit = {};
+
+    trades_map_limit["TEST_MARKET"] = {{"Direction", "buy"}, {"Quantity", 1000}};
+
+    EXPECT_EQ(g.trade_order(trades_map_limit, "MARKET"), response);
+}
+
+TEST(GainCapitalFunctional, ListOpenPositionsFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    nlohmann::json response{};
+
+    EXPECT_EQ(g.list_open_positions(), response);
+}
+
+TEST(GainCapitalFunctional, ListActiveFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    nlohmann::json response{};
+
+    EXPECT_EQ(g.list_active_orders(), response);
+}
+
+TEST(GainCapitalFunctional, CancelOrderFailedServerTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9200");
+    g.authenticate_session();
+
+    nlohmann::json response{};
+
+    EXPECT_EQ(g.cancel_order("123456"), response);
+}
 
 int main(int argc, char *argv[]) {
     ::testing::InitGoogleTest(&argc, argv);

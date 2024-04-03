@@ -87,6 +87,7 @@ bool GCapiClient::authenticate_session()
 
 bool GCapiClient::set_trading_account_id()
 {
+    // Private Function
     cpr::Url url = cpr::Url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
 
     int iteration = 0;
@@ -252,8 +253,8 @@ nlohmann::json GCapiClient::get_account_info(std::string param)
 nlohmann::json GCapiClient::get_margin_info(std::string param)
 {
     /* Gets trading account margin information
-       :param: retrieve specific information (e.g. Cash)
-           :return: trading account margin information
+        :param: retrieve specific information (e.g. Cash)
+        :return: trading account margin information
         -- Example of param options
         float margin_total = resp["margin"];
         float equity_total = resp["netEquity"];
@@ -263,7 +264,7 @@ nlohmann::json GCapiClient::get_margin_info(std::string param)
     if (validate_session())
     {
         cpr::Url url = cpr::Url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
-        
+
         int iteration = 0;
         while (iteration < 2)
         {
@@ -375,12 +376,12 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
 std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> market_name_list, unsigned int num_ticks,
                                                                         long unsigned int from_ts, long unsigned int to_ts, std::string price_type)
 {
-    /* Get prices
-   :param market_name_list: market name (e.g. USD/CAD)
-       :param num_ticks: number of price ticks/data to retrieve
-       :param from_ts: from timestamp UTC
-   :param to_ts: to timestamp UTC
-   :return: price data
+    /*  Get prices
+        :param market_name_list: market name (e.g. USD/CAD)
+        :param num_ticks: number of price ticks/data to retrieve
+        :param from_ts: from timestamp UTC
+        :param to_ts: to timestamp UTC
+        :return: price data
   */
     std::unordered_map<std::string, nlohmann::json> response_map = {};
 
@@ -447,13 +448,11 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
                         sleep(1);
                         continue;
                     }
-                    response_map[market_name] = {"Error"};
                     break;
                 }
                 catch (...)
                 {
                     BOOST_LOG_TRIVIAL(error) << "Unknown Error in Fetching Price for " << market_name;
-                    response_map[market_name] = {"Error"};
                     break;
                 }
                 ++iteration;
@@ -464,16 +463,17 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, std::string interval, unsigned int num_ticks,
-                                                                      unsigned int span, long unsigned int from_ts, long unsigned int to_ts)
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, std::string interval,
+                                                                      unsigned int num_ticks, unsigned int span, long unsigned int from_ts,
+                                                                      long unsigned int to_ts)
 {
-    /* Get the open, high, low, close of a specific market_id
-           :param market_name_list: market name (e.g. USD/CAD)
-           :param num_ticks: number of price ticks/data to retrieve
-           :param interval: MINUTE, HOUR or DAY tick interval
-           :param span: it can be a combination of span with interval, 1Hour, 15
-       MINUTE :param from_ts: from timestamp UTC :param to_ts: to timestamp UTC
-           :return: ohlc dataframe
+    /*  Get the open, high, low, close of a specific market_id
+        :param market_name_list: market name (e.g. USD/CAD)
+        :param num_ticks: number of price ticks/data to retrieve
+        :param interval: MINUTE, HOUR or DAY tick interval
+        :param span: it can be a combination of span with interval, 1Hour, 15 MINUTE
+        :param from_ts: from timestamp UTC :param to_ts: to timestamp UTC
+        :return: ohlc dataframe
     */
     std::unordered_map<std::string, nlohmann::json> response_map = {};
 
@@ -564,13 +564,11 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
                         sleep(1);
                         continue;
                     }
-                    response_map[market_name] = {"Error"};
                     break;
                 }
                 catch (...)
                 {
                     BOOST_LOG_TRIVIAL(error) << "Unknown Error in Fetching OHLC for " << market_name;
-                    response_map[market_name] = {"Error"};
                     break;
                 }
                 ++iteration;
@@ -583,11 +581,11 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
 
 std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id)
 {
-    /* Makes a new trade order
-       :param trade_map: JSON object formated as in the example below
-       :param type: Limit or Market order tpye
-           :param trading_acc_id: trading account ID
-           :return: error_list: list of symbol name that failed ot place trade
+    /*  Makes a new trade order
+        :param trade_map: JSON object formated as in the example below
+        :param type: Limit or Market order type
+        :param trading_acc_id: trading account ID
+        :return: error_list: list of symbol name that failed to place trade
        // Market Order
        TRADE_MAP = {{"MARKET_NAME",{
           {"Direction","buy/sell"},
@@ -602,7 +600,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
           {'LimitPrice", "1.3521 or 0 for None"}}
          }}
     */
-    std::vector<std::string> error_list = {};
+    std::vector<std::string> error_list = {}, input_error_list = {};
 
     if (validate_session())
     {
@@ -644,24 +642,34 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                 if (trade_map[market_name]["Direction"].dump() == "null")
                 {
                     BOOST_LOG_TRIVIAL(error) << market_name << " - Direction Required for All Orders";
-                    error_list.push_back(market_name);
+                    input_error_list.push_back(market_name);
                     continue;
                 }
                 if (trade_map[market_name]["Quantity"].dump() == "null")
                 {
                     BOOST_LOG_TRIVIAL(error) << market_name << " - Quantity Required for All Orders";
-                    error_list.push_back(market_name);
+                    input_error_list.push_back(market_name);
                     continue;
                 }
                 if (type == "LIMIT" && trade_map[market_name]["TriggerPrice"].dump() == "null")
                 {
                     BOOST_LOG_TRIVIAL(error) << market_name << "- Trigger Price Required for Limit Orders";
-                    error_list.push_back(market_name);
+                    input_error_list.push_back(market_name);
                     continue;
                 }
 
-                float bid_price = get_prices({market_name}, 1, 0, 0, "BID")[market_name][0]["Price"];
-                float offer_price = get_prices({market_name}, 1, 0, 0, "ASK")[market_name][0]["Price"];
+                float bid_price, offer_price;
+                try
+                {
+                    bid_price = get_prices({market_name}, 1, 0, 0, "BID")[market_name][0]["Price"];
+                    offer_price = get_prices({market_name}, 1, 0, 0, "ASK")[market_name][0]["Price"];
+                }
+                catch( ... )
+                {
+                    error_list.push_back(market_name);
+                    BOOST_LOG_TRIVIAL(error) << "Failure Fetching Prices for Market - " << market_name;
+                    continue;
+                }
                 // ---------------------------
                 std::vector<nlohmann::json> if_done = {};
                 if (type == "LIMIT")
@@ -700,8 +708,17 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                         {"BidPrice", std::to_string(bid_price)},
                     };
 
-                    if (type == "LIMIT") { trade_payload += {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()}, {"IfDone", if_done}}; }
-                    else { trade_payload += {{"PriceTolerance", "0"}}; }
+                    if (type == "LIMIT")
+                    {
+                        nlohmann::json additional_payload = {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()}, {"IfDone", if_done}};
+                        trade_payload.update(additional_payload);
+                    }
+                    else
+                    {
+                        nlohmann::json additional_payload = {{"PriceTolerance", "0"}};
+                        trade_payload.update(additional_payload);
+                    }
+
                     cpr::Response r = cpr::Post(url, session_header, cpr::Body(trade_payload.dump()));
                     if (r.status_code == 200)
                     {
@@ -731,6 +748,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
         }
     }
     // -------------------
+    error_list.insert(error_list.end(), input_error_list.begin(), input_error_list.end());
     return error_list;
 }
 
@@ -790,7 +808,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
     if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
-        
+
         cpr::Url url = cpr::Url {rest_url + "/order/activeorders"};
         nlohmann::json active_order_payload = {{"TradingAccountId", tr_account_id}, {"MaxResults", "100"}};
         int iteration = 0;
@@ -838,7 +856,7 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
     if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
-        
+
         cpr::Url url = cpr::Url {rest_url + "/order/cancel"};
         nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id}, {"OrderId", order_id}};
         int iteration = 0;

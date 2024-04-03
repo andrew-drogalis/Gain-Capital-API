@@ -54,7 +54,7 @@ class HTTPMock: public httpmock::MockServer {
         // Prices
         else if (method == "GET" && matchesPrices(url, "/market/123/tickhistory")) {
             
-            return Response(200, "{\"PriceTicks\":{\"TEST_MARKET\":[{\"Price\" : 1.0}]}}");
+            return Response(200, "{\"PriceTicks\":[{\"Price\" : 1.0}]}");
         }
         // OHLC
         else if (method == "GET" && matchesOHLC(url, "/market/123/barhistory")) {
@@ -206,7 +206,7 @@ TEST(GainCapitalFunctional, GetPricesBasicTest) {
     g.set_testing_rest_urls("http://localhost:9201");
     g.authenticate_session();
 
-    nlohmann::json json = nlohmann::json::parse("{\"TEST_MARKET\":[{\"Price\" : 1.0}]}");
+    nlohmann::json json = nlohmann::json::parse("[{\"Price\" : 1.0}]");
     std::unordered_map<std::string, nlohmann::json> response = {{"TEST_MARKET", json}};
 
     EXPECT_EQ(g.get_prices({"TEST_MARKET"}), response);
@@ -217,7 +217,7 @@ TEST(GainCapitalFunctional, GetPricesTest1) {
     g.set_testing_rest_urls("http://localhost:9201");
     g.authenticate_session();
 
-    nlohmann::json json = nlohmann::json::parse("{\"TEST_MARKET\":[{\"Price\" : 1.0}]}");
+    nlohmann::json json = nlohmann::json::parse("[{\"Price\" : 1.0}]");
     std::unordered_map<std::string, nlohmann::json> response = {{"TEST_MARKET", json}};
 
     EXPECT_EQ(g.get_prices({"TEST_MARKET"}, 1, 0, 0, "MID"), response);
@@ -228,7 +228,7 @@ TEST(GainCapitalFunctional, GetPricesTest2) {
     g.set_testing_rest_urls("http://localhost:9201");
     g.authenticate_session();
 
-    nlohmann::json json = nlohmann::json::parse("{\"TEST_MARKET\":[{\"Price\" : 1.0}]}");
+    nlohmann::json json = nlohmann::json::parse("[{\"Price\" : 1.0}]");
     std::unordered_map<std::string, nlohmann::json> response = {{"TEST_MARKET", json}};
 
     EXPECT_EQ(g.get_prices({"TEST_MARKET"}, 1, 0, 100, "BID"), response);
@@ -239,7 +239,7 @@ TEST(GainCapitalFunctional, GetPricesTest3) {
     g.set_testing_rest_urls("http://localhost:9201");
     g.authenticate_session();
 
-    nlohmann::json json = nlohmann::json::parse("{\"TEST_MARKET\":[{\"Price\" : 1.0}]}");
+    nlohmann::json json = nlohmann::json::parse("[{\"Price\" : 1.0}]");
     std::unordered_map<std::string, nlohmann::json> response = {{"TEST_MARKET", json}};
 
     EXPECT_EQ(g.get_prices({"TEST_MARKET"}, 1, 1000, 0, "ASK"), response);
@@ -334,7 +334,7 @@ TEST(GainCapitalFunctional, TradeOrderMarketBasicTest) {
 
     nlohmann::json trades_map_limit = {};
 
-    trades_map_limit["TEST_MARKET"] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", 1.0}, {"StopPrice", 1.2}};
+    trades_map_limit["TEST_MARKET"] = {{"Direction", "buy"}, {"Quantity", 1000}};
 
     EXPECT_EQ(g.trade_order(trades_map_limit, "MARKET"), response);
 }
@@ -348,7 +348,63 @@ TEST(GainCapitalFunctional, TradeOrderLimitBasicTest) {
 
     nlohmann::json trades_map_limit = {};
 
+    trades_map_limit["TEST_MARKET"] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", 1.0}, {"StopPrice", 1.2}, {"LimitPrice", 2.0}};
+
+    EXPECT_EQ(g.trade_order(trades_map_limit, "LIMIT"), response);
+}
+
+TEST(GainCapitalFunctional, TradeOrderFAILURETest1) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9201");
+    g.authenticate_session();
+
+    std::vector<std::string> response{"TEST_MARKET"};
+
+    nlohmann::json trades_map_limit = {};
+
     trades_map_limit["TEST_MARKET"] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", 1.0}, {"StopPrice", 1.2}};
+
+    EXPECT_EQ(g.trade_order(trades_map_limit, "NONE"), response);
+}
+
+TEST(GainCapitalFunctional, TradeOrderFAILURETest2) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9201");
+    g.authenticate_session();
+
+    std::vector<std::string> response{"TEST_MARKET"};
+
+    nlohmann::json trades_map_limit = {};
+
+    trades_map_limit["TEST_MARKET"] = {{"Direction", "buy"}};
+
+    EXPECT_EQ(g.trade_order(trades_map_limit, "MARKET"), response);
+}
+
+TEST(GainCapitalFunctional, TradeOrderFAILURETest3) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9201");
+    g.authenticate_session();
+
+    std::vector<std::string> response{"TEST_MARKET"};
+
+    nlohmann::json trades_map_limit = {};
+
+    trades_map_limit["TEST_MARKET"] = {{"Quantity", 1000}};
+
+    EXPECT_EQ(g.trade_order(trades_map_limit, "MARKET"), response);
+}
+
+TEST(GainCapitalFunctional, TradeOrderFAILURETest4) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9201");
+    g.authenticate_session();
+
+    std::vector<std::string> response{"TEST_MARKET"};
+
+    nlohmann::json trades_map_limit = {};
+
+    trades_map_limit["TEST_MARKET"] = {{"Direction", "buy"}, {"Quantity", 1000}, {"StopPrice", 1.2}};
 
     EXPECT_EQ(g.trade_order(trades_map_limit, "LIMIT"), response);
 }
