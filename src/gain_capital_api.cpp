@@ -582,7 +582,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
 std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id)
 {
     /*  Makes a new trade order
-        :param trade_map: JSON object formated as in the example below
+        :param trade_map: JSON object formatted as in the example below
         :param type: Limit or Market order type
         :param trading_acc_id: trading account ID
         :return: error_list: list of symbol name that failed to place trade
@@ -754,7 +754,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
 
 nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
 {
-    /* List of Open Positons in Trading Account
+    /* List of Open Positions in Trading Account
        :param trading_acc_id: trading account ID
        :return JSON response
     */

@@ -66,12 +66,11 @@ target_link_libraries(
 
 # Add a testing executable
 add_executable(
-  functional_tests_production_scenario functional_tests_correct_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp
-                                       ${PARENT_DIR}/src/httpmockserver/mock_server.cc)
+  functional_tests_production_scenario functional_tests_correct_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp)
 
 target_include_directories(functional_tests_production_scenario PRIVATE ${PARENT_DIR}/include)
 
-target_link_libraries(functional_tests_production_scenario PRIVATE cpr::cpr)
+target_link_libraries(functional_tests_production_scenario PRIVATE cpr::cpr ${PARENT_DIR}/lib/libhttpmockserver.a)
 
 target_link_libraries(
   functional_tests_production_scenario
@@ -84,12 +83,11 @@ target_link_libraries(
 
 # Add a testing executable
 add_executable(
-  functional_tests_failure_scenario functional_tests_failed_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp
-                                    ${PARENT_DIR}/src/httpmockserver/mock_server.cc)
+  functional_tests_failure_scenario functional_tests_failed_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp)
 
 target_include_directories(functional_tests_failure_scenario PRIVATE ${PARENT_DIR}/include)
 
-target_link_libraries(functional_tests_failure_scenario PRIVATE cpr::cpr)
+target_link_libraries(functional_tests_failure_scenario PRIVATE cpr::cpr ${PARENT_DIR}/lib/libhttpmockserver.a)
 
 target_link_libraries(
   functional_tests_failure_scenario

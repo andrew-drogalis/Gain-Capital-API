@@ -158,6 +158,7 @@ To build the shared library and header files, run the commands below.
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) - Required for Tests Only - *Must be installed by user*
 - [CPR](https://github.com/libcpr/cpr) - Included in CMake Fetch Content
 - [JSON](https://github.com/nlohmann/json) - .hpp file included in repository
+- [httpmockserver](https://github.com/seznam/httpmockserver) - Required for Tests Only - Library included in repository
 
 ## Lightstreamer
 
