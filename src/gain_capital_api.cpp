@@ -21,8 +21,6 @@ namespace gaincapital
 
 GCapiClient::GCapiClient() {}
 
-GCapiClient::~GCapiClient() {}
-
 GCapiClient::GCapiClient(std::string username, std::string password, std::string apikey)
 {
     auth_payload = {{"UserName", username}, {"Password", password}, {"AppKey", apikey}};

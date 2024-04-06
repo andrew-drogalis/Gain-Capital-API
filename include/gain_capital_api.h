@@ -25,8 +25,6 @@ class GCapiClient
 
     GCapiClient();
 
-    ~GCapiClient();
-
     GCapiClient(std::string username, std::string password, std::string appkey);
 
     // =================================================================================================================
