@@ -26,6 +26,10 @@ class GCapiClient
     GCapiClient();
 
     GCapiClient(std::string username, std::string password, std::string appkey);
+    
+    GCapiClient(const GCapiClient& obj) = delete;
+    
+    GCapiClient& operator=(const GCapiClient& obj) = delete;
 
     // =================================================================================================================
     // UTILITIES
