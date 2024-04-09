@@ -14,10 +14,10 @@ using namespace std;
 int main()
 {
     // Forex.com Account Info
-    string username = "BLANK", password = "BLANK", apikey = "BLANK";
+    string const username = "BLANK", password = "BLANK", apikey = "BLANK";
 
     // List of Currencies to Trade
-    vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
+    vector<string> const currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
 
     // Initialize GCapiClient
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
@@ -42,26 +42,26 @@ int main()
     std::unordered_map<std::string, nlohmann::json> price_response = gc_api.get_prices(currency_pairs);
 
     // Get OHLC Bars
-    string interval = "MINUTE";
-    int num_ticks = 10;
+    string const interval = "MINUTE";
+    int const num_ticks = 10;
     std::unordered_map<std::string, nlohmann::json> ohlc_response = gc_api.get_ohlc(currency_pairs, interval, num_ticks);
 
     // Place Market Order
     nlohmann::json trades_map_market = {};
     for (string const& symbol : currency_pairs) { trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}}; }
-    std::vector<std::string> market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
+    std::vector<std::string> const market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
     for (string const& symbol : currency_pairs)
     {
-        float mid_price = static_cast<float>(price_response[symbol][0]["Price"]);
-        float trigger_price = mid_price * 1.1;
-        float stop_price = mid_price * 0.9;
+        float const mid_price = static_cast<float>(price_response[symbol][0]["Price"]);
+        float const trigger_price = mid_price * 1.1;
+        float const stop_price = mid_price * 0.9;
 
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
-    std::vector<std::string> limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
+    std::vector<std::string> const limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
 
     // Order Management
     nlohmann::json active_order_response = gc_api.list_active_orders();
@@ -74,14 +74,14 @@ int main()
         // Cancel Market Orders
         if (active_order.contains("TradeOrder"))
         {
-            string order_id = active_order["TradeOrder"]["OrderId"].dump();
+            string const order_id = active_order["TradeOrder"]["OrderId"].dump();
             gc_api.cancel_order(order_id);
         }
 
         // Cancel Limit Orders
         if (active_order.contains("StopLimitOrder"))
         {
-            string order_id = active_order["StopLimitOrder"]["OrderId"].dump();
+            string const order_id = active_order["StopLimitOrder"]["OrderId"].dump();
             gc_api.cancel_order(order_id);
         }
     }

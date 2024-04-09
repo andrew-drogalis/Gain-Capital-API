@@ -39,8 +39,8 @@ bool GCapiClient::authenticate_session()
     */
     if (! validate_auth_payload()) { return false; }
 
-    cpr::Header headers = cpr::Header {{"Content-Type", "application/json"}};
-    std::string url = rest_url_v2 + "/Session";
+    cpr::Header const headers {{"Content-Type", "application/json"}};
+    cpr::Url const url {rest_url_v2 + "/Session"};
     std::string resp_session;
     // ---------------------------
     int iteration = 0;
@@ -48,7 +48,7 @@ bool GCapiClient::authenticate_session()
     {
         try
         {
-            cpr::Response r = cpr::Post(cpr::Url {url}, headers, cpr::Body {auth_payload.dump()});
+            cpr::Response r = cpr::Post(url, headers, cpr::Body {auth_payload.dump()});
             if (r.status_code != 200) { throw r; }
             nlohmann::json resp = nlohmann::json::parse(r.text);
 
@@ -87,7 +87,7 @@ bool GCapiClient::authenticate_session()
 bool GCapiClient::set_trading_account_id()
 {
     /* Note: Internal function used to set the member variables trading_account_id & client_account_id. */
-    cpr::Url url = cpr::Url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
+    cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
     // ---------------------------
     int iteration = 0;
     while (iteration < 2)
@@ -129,12 +129,12 @@ bool GCapiClient::validate_session()
     /* Note: Validates current session and updates if token expired. */
     if (! validate_session_header()) { return false; }
 
-    nlohmann::json resp = {};
+    nlohmann::json resp;
     nlohmann::json payload = {{"ClientAccountId", client_account_id},
                               {"UserName", session_header["Username"]},
                               {"Session", session_header["Session"]},
                               {"TradingAccountId", trading_account_id}};
-    cpr::Url url = cpr::Url {rest_url_v2 + "/Session/validate"};
+    cpr::Url const url {rest_url_v2 + "/Session/validate"};
 
     int iteration = 0;
     while (iteration < 2)
@@ -196,9 +196,10 @@ void GCapiClient::initialize_logging_file(std::string file_path, std::string fil
     else if (severity == "info") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info); }
     else if (severity == "debug") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug); }
     else if (severity == "trace") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace); }
-    else 
+    else
     {
-        std::cerr << "No match to Boost Logging Severity Level. Provide one of the following: 'fatal', 'error', 'warning', 'info', 'debug', or 'trace'";
+        std::cerr
+            << "No match to Boost Logging Severity Level. Provide one of the following: 'fatal', 'error', 'warning', 'info', 'debug', or 'trace'";
     }
 
     boost::log::add_common_attributes();
@@ -241,8 +242,8 @@ nlohmann::json GCapiClient::get_account_info(std::string param)
        :param: retrieve specific information (e.g. TradingAccountId)
        :return: trading account information
     */
-    nlohmann::json resp = {};
-    cpr::Url url = cpr::Url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
+    nlohmann::json resp;
+    cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
 
     if (validate_session())
     {
@@ -293,11 +294,11 @@ nlohmann::json GCapiClient::get_margin_info(std::string param)
         float margin_total = resp["margin"];
         float equity_total = resp["netEquity"];
     */
-    nlohmann::json resp = {};
+    nlohmann::json resp;
     // -------------------
     if (validate_session())
     {
-        cpr::Url url = cpr::Url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
+        cpr::Url const url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
 
         int iteration = 0;
         while (iteration < 2)
@@ -346,7 +347,7 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std
         {
             try
             {
-                cpr::Url url = cpr::Url {rest_url + "/cfd/markets?MarketName=" + market_name};
+                cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
                 cpr::Response r = cpr::Get(url, session_header);
                 if (r.status_code != 200) { throw r; }
                 nlohmann::json resp = nlohmann::json::parse(r.text);
@@ -376,7 +377,7 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
        :param: retrieve specific information (e.g. MarketId)
        :return: market information
     */
-    std::unordered_map<std::string, std::string> response_map = {};
+    std::unordered_map<std::string, std::string> response_map;
     // -------------------
     if (validate_session())
     {
@@ -384,7 +385,7 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
         {
             try
             {
-                cpr::Url url = cpr::Url {rest_url + "/cfd/markets?MarketName=" + market_name};
+                cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
                 cpr::Response r = cpr::Get(url, session_header);
                 if (r.status_code != 200) { throw r; }
                 nlohmann::json resp = nlohmann::json::parse(r.text);
@@ -417,7 +418,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
         :param to_ts: to timestamp UTC
         :return: price data
   */
-    std::unordered_map<std::string, nlohmann::json> response_map = {};
+    std::unordered_map<std::string, nlohmann::json> response_map;
     // -------------------
     if (validate_session())
     {
@@ -509,15 +510,15 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
         :param from_ts: from timestamp UTC :param to_ts: to timestamp UTC
         :return: ohlc dataframe
     */
-    std::unordered_map<std::string, nlohmann::json> response_map = {};
+    std::unordered_map<std::string, nlohmann::json> response_map;
     // -------------------
     if (validate_session())
     {
         std::transform(interval.begin(), interval.end(), interval.begin(), ::toupper);
 
-        std::vector<int> SPAN_M = {1, 2, 3, 5, 10, 15, 30};// Span intervals for minutes
-        std::vector<int> SPAN_H = {1, 2, 4, 8};            // Span intervals for hours
-        std::vector<std::string> INTERVAL = {"HOUR", "MINUTE", "DAY", "WEEK", "MONTH"};
+        std::vector<int> const SPAN_M = {1, 2, 3, 5, 10, 15, 30};// Span intervals for minutes
+        std::vector<int> const SPAN_H = {1, 2, 4, 8};            // Span intervals for hours
+        std::vector<std::string> const INTERVAL = {"HOUR", "MINUTE", "DAY", "WEEK", "MONTH"};
 
         if (std::find(INTERVAL.begin(), INTERVAL.end(), interval) == INTERVAL.end())
         {
@@ -634,7 +635,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
           {'LimitPrice", "1.3521 or 0 for None"}}
          }}
     */
-    std::vector<std::string> error_list = {}, input_error_list = {};
+    std::vector<std::string> error_list, input_error_list;
     // -------------------
     if (validate_session())
     {
@@ -654,9 +655,9 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
         unsigned int current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
                                     std::chrono::system_clock::period::den;
         int const OFFSET_SECONDS = 8;
-        unsigned int stop_time = current_time + OFFSET_SECONDS;
+        unsigned int const stop_time = current_time + OFFSET_SECONDS;
 
-        cpr::Url url = (type == "MARKET") ? cpr::Url {rest_url + "/order/newtradeorder"} : cpr::Url {rest_url + "/order/newstoplimitorder"};
+        cpr::Url const url = (type == "MARKET") ? cpr::Url {rest_url + "/order/newtradeorder"} : cpr::Url {rest_url + "/order/newstoplimitorder"};
 
         while (! market_name_list.empty() && current_time <= stop_time)
         {
@@ -792,12 +793,12 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
        :param trading_acc_id: trading account ID
        :return JSON response
     */
-    nlohmann::json resp = {};
+    nlohmann::json resp;
     // -------------------
     if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
-        cpr::Url url = cpr::Url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
+        cpr::Url const url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
         int iteration = 0;
         while (iteration < 2)
         {
@@ -837,13 +838,13 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
        :param trading_acc_id: trading account ID
        :return JSON response
     */
-    nlohmann::json resp = {};
+    nlohmann::json resp;
     // -------------------
     if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
 
-        cpr::Url url = cpr::Url {rest_url + "/order/activeorders"};
+        cpr::Url const url {rest_url + "/order/activeorders"};
         nlohmann::json active_order_payload = {{"TradingAccountId", tr_account_id}, {"MaxResults", "100"}};
         int iteration = 0;
         while (iteration < 2)
@@ -885,13 +886,13 @@ nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_ac
        :param trading_acc_id: trading account ID
        :return JSON response
     */
-    nlohmann::json resp = {};
+    nlohmann::json resp;
     // -------------------
     if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
 
-        cpr::Url url = cpr::Url {rest_url + "/order/cancel"};
+        cpr::Url const url {rest_url + "/order/cancel"};
         nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id}, {"OrderId", order_id}};
         int iteration = 0;
         while (iteration < 2)
