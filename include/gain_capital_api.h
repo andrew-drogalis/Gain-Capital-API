@@ -26,18 +26,26 @@ class GCapiClient
     GCapiClient();
 
     GCapiClient(std::string username, std::string password, std::string appkey);
-    
+
     GCapiClient(const GCapiClient& obj) = delete;
-    
+
     GCapiClient& operator=(const GCapiClient& obj) = delete;
 
     // =================================================================================================================
-    // UTILITIES
+    // AUTHENTICATION
     // =================================================================================================================
 
     bool authenticate_session();
 
     bool validate_session();
+
+    // =================================================================================================================
+    // UTILITIES
+    // =================================================================================================================
+
+    void add_console_log(bool enable);
+
+    void initialize_logging_file(std::string file_path, std::string file_name, std::string severity = "debug");
 
     bool validate_session_header();
 
@@ -81,6 +89,10 @@ class GCapiClient
     cpr::Header session_header;
     nlohmann::json auth_payload;
     nlohmann::json session_payload;
+
+    // =================================================================================================================
+    // AUTHENTICATION
+    // =================================================================================================================
 
     bool set_trading_account_id();
 };

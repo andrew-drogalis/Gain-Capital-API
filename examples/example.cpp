@@ -19,8 +19,11 @@ int main()
     // List of Currencies to Trade
     vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
 
-    // Initalize GCapiClient
+    // Initialize GCapiClient
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
+
+    // Send Logging to STD Ouput
+    gc_api.add_console_log(true);
 
     // Required for First Authentication
     if (! gc_api.authenticate_session()) { return 1; }
@@ -59,7 +62,7 @@ int main()
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
     std::vector<std::string> limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
-   
+
     // Order Management
     nlohmann::json active_order_response = gc_api.list_active_orders();
 

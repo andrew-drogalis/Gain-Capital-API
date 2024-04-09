@@ -6,6 +6,7 @@
 * [Instructions](#Instructions)
     - [Downloading Dependencies](#Downloading-Dependencies)
     - [Initializing API](#Initializing-API)
+    - [Initializing Logging](#Initializing-Logging)
     - [Authenticating Session](#Authenticating-Session)
     - [Account & Margin Information](#Account-&-Margin-Information)
     - [Market IDs & Information](#Market-IDs-&-Information)
@@ -46,8 +47,21 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     // List of Currencies to Trade
     vector<string> currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
 
-    // Initalize GCapiClient
+    // Initialize GCapiClient
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
+```
+
+### Initializing Logging
+
+```c
+    // Send Logging to STD Output
+    gc_api.add_console_log(true);
+
+    // Send Logging to File
+    std::string file_path = "/home/user";
+    std::string file_name = "gain_capital";
+    std::string severity_level = "debug";
+    gc_api.initialize_logging_file(file_path, file_name, severity_level);
 ```
 
 ### Authenticating Session
