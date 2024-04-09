@@ -195,7 +195,11 @@ void GCapiClient::initialize_logging_file(std::string file_path, std::string fil
     else if (severity == "warning") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning); }
     else if (severity == "info") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info); }
     else if (severity == "debug") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug); }
-    else { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace); }
+    else if (severity == "trace") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace); }
+    else 
+    {
+        std::cerr << "No match to Boost Logging Severity Level. Provide one of the following: 'fatal', 'error', 'warning', 'info', 'debug', or 'trace'";
+    }
 
     boost::log::add_common_attributes();
 }
