@@ -46,11 +46,11 @@ class GCapiClient
 
     void initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity = "debug") noexcept;
 
-    bool validate_session_header() noexcept;
+    bool validate_session_header() const noexcept;
 
-    bool validate_auth_payload() noexcept;
+    bool validate_auth_payload() const noexcept;
 
-    bool validate_account_ids() noexcept;
+    bool validate_account_ids() const noexcept;
 
     void set_testing_rest_urls(const std::string& url) noexcept;
 

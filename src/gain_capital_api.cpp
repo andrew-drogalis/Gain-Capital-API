@@ -205,7 +205,7 @@ void GCapiClient::initialize_logging_file(const std::string& file_path, const st
     boost::log::add_common_attributes();
 }
 
-bool GCapiClient::validate_session_header() noexcept
+bool GCapiClient::validate_session_header() const noexcept
 {
     if (session_header.empty())
     {
@@ -215,7 +215,7 @@ bool GCapiClient::validate_session_header() noexcept
     return true;
 }
 
-bool GCapiClient::validate_auth_payload() noexcept
+bool GCapiClient::validate_auth_payload() const noexcept
 {
     if (auth_payload.empty())
     {
@@ -225,7 +225,7 @@ bool GCapiClient::validate_auth_payload() noexcept
     return true;
 }
 
-bool GCapiClient::validate_account_ids() noexcept
+bool GCapiClient::validate_account_ids() const noexcept
 {
     if (trading_account_id == "" || client_account_id == "") { return false; }
     return true;
