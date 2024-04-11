@@ -18,7 +18,6 @@ class GCapiClient
 {
 
   public:
-    // User can access these.
     std::string trading_account_id = "";
     std::string client_account_id = "";
     std::unordered_map<std::string, int> market_id_map;
