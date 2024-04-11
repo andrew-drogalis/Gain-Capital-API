@@ -68,12 +68,12 @@ class GCapiClient
                                                                                const std::string& param = "");
 
     [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_prices(const std::vector<std::string>& market_name_list,
-                                                                             unsigned int num_ticks = 1, long unsigned int from_ts = 0,
-                                                                             long unsigned int to_ts = 0, std::string price_type = "MID");
+                                                                             const std::size_t num_ticks = 1, const std::size_t from_ts = 0,
+                                                                             const std::size_t to_ts = 0, std::string price_type = "MID");
 
     [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_ohlc(const std::vector<std::string>& market_name_list, std::string interval,
-                                                                           unsigned int num_ticks = 1, unsigned int span = 1,
-                                                                           long unsigned int from_ts = 0, long unsigned int to_ts = 0);
+                                                                           const std::size_t num_ticks = 1, std::size_t span = 1,
+                                                                           const std::size_t from_ts = 0, const std::size_t to_ts = 0);
 
     [[nodiscard]] std::vector<std::string> trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id = "");
 

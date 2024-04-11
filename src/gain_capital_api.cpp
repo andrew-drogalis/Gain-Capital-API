@@ -408,8 +408,8 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const 
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const std::vector<std::string>& market_name_list, unsigned int num_ticks,
-                                                                        long unsigned int from_ts, long unsigned int to_ts, std::string price_type)
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const std::vector<std::string>& market_name_list, const std::size_t num_ticks,
+                                                                        const std::size_t from_ts, const std::size_t to_ts, std::string price_type)
 {
     /*  Get prices
         :param market_name_list: market name (e.g. USD/CAD)
@@ -499,8 +499,8 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const st
 }
 
 std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(const std::vector<std::string>& market_name_list, std::string interval,
-                                                                      unsigned int num_ticks, unsigned int span, long unsigned int from_ts,
-                                                                      long unsigned int to_ts)
+                                                                      const std::size_t num_ticks, std::size_t span, const std::size_t from_ts,
+                                                                      const std::size_t to_ts)
 {
     /*  Get the open, high, low, close of a specific market_id
         :param market_name_list: market name (e.g. USD/CAD)
