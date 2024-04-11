@@ -23,7 +23,7 @@ namespace gaincapital
 
 GCapiClient::GCapiClient() {}
 
-GCapiClient::GCapiClient(std::string username, std::string password, std::string apikey)
+GCapiClient::GCapiClient(const std::string& username, const std::string& password, const std::string& apikey) noexcept
 {
     auth_payload = {{"UserName", username}, {"Password", password}, {"AppKey", apikey}};
 }
@@ -173,7 +173,7 @@ bool GCapiClient::validate_session()
 // UTILITIES
 // =================================================================================================================
 
-void GCapiClient::add_console_log(bool enable)
+void GCapiClient::add_console_log(bool enable) noexcept
 {
     /* Optional: Boost Logging to STD Output */
     static auto console_sink = boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
@@ -181,11 +181,11 @@ void GCapiClient::add_console_log(bool enable)
     if (! enable) { boost::log::core::get()->remove_sink(console_sink); }
 }
 
-void GCapiClient::initialize_logging_file(std::string file_path, std::string file_name, std::string severity)
+void GCapiClient::initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity) noexcept
 {
     /* Optional: Boost Logging to File */
-    file_name = file_path + "/" + file_name + ".log";
-    boost::log::add_file_log(boost::log::keywords::file_name = file_name, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
+    std::string file_name_concat = file_path + "/" + file_name + ".log";
+    boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
                              boost::log::keywords::auto_flush = true);
 
     std::transform(severity.begin(), severity.end(), severity.begin(), ::tolower);
@@ -205,7 +205,7 @@ void GCapiClient::initialize_logging_file(std::string file_path, std::string fil
     boost::log::add_common_attributes();
 }
 
-bool GCapiClient::validate_session_header()
+bool GCapiClient::validate_session_header() noexcept
 {
     if (session_header.empty())
     {
@@ -215,7 +215,7 @@ bool GCapiClient::validate_session_header()
     return true;
 }
 
-bool GCapiClient::validate_auth_payload()
+bool GCapiClient::validate_auth_payload() noexcept
 {
     if (auth_payload.empty())
     {
@@ -225,18 +225,18 @@ bool GCapiClient::validate_auth_payload()
     return true;
 }
 
-bool GCapiClient::validate_account_ids()
+bool GCapiClient::validate_account_ids() noexcept
 {
     if (trading_account_id == "" || client_account_id == "") { return false; }
     return true;
 }
 
-void GCapiClient::set_testing_rest_urls(std::string url) { rest_url = rest_url_v2 = url; }
+void GCapiClient::set_testing_rest_urls(const std::string& url) noexcept { rest_url = rest_url_v2 = url; }
 
 // =================================================================================================================
 // API CALLS
 // =================================================================================================================
-nlohmann::json GCapiClient::get_account_info(std::string param)
+nlohmann::json GCapiClient::get_account_info(const std::string& param)
 {
     /* Gets trading account general information
        :param: retrieve specific information (e.g. TradingAccountId)
@@ -285,7 +285,7 @@ nlohmann::json GCapiClient::get_account_info(std::string param)
     return resp;
 }
 
-nlohmann::json GCapiClient::get_margin_info(std::string param)
+nlohmann::json GCapiClient::get_margin_info(const std::string& param)
 {
     /* Gets trading account margin information
         :param: retrieve specific information (e.g. Cash)
@@ -335,7 +335,7 @@ nlohmann::json GCapiClient::get_margin_info(std::string param)
     return resp;
 }
 
-std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std::string> market_name_list)
+std::unordered_map<std::string, int> GCapiClient::get_market_ids(const std::vector<std::string>& market_name_list)
 {
     /* Gets market information
        :market_name_list: market name (e.g. USD/CAD)
@@ -370,7 +370,7 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std
     return market_id_map;
 }
 
-std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::vector<std::string> market_name_list, std::string param)
+std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const std::vector<std::string>& market_name_list, const std::string& param)
 {
     /* Gets market information
        :market_name_list: market name (e.g. USD/CAD)
@@ -408,7 +408,7 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> market_name_list, unsigned int num_ticks,
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const std::vector<std::string>& market_name_list, unsigned int num_ticks,
                                                                         long unsigned int from_ts, long unsigned int to_ts, std::string price_type)
 {
     /*  Get prices
@@ -436,7 +436,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
             if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
             else
             {
-                get_market_ids({market_name});
+                auto response = get_market_ids({market_name});
                 market_id = std::to_string(market_id_map[market_name]);
             }
             // ---------------------------
@@ -498,7 +498,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> market_name_list, std::string interval,
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(const std::vector<std::string>& market_name_list, std::string interval,
                                                                       unsigned int num_ticks, unsigned int span, long unsigned int from_ts,
                                                                       long unsigned int to_ts)
 {
@@ -552,7 +552,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
             if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
             else
             {
-                get_market_ids({market_name});
+                auto response = get_market_ids({market_name});
                 market_id = std::to_string(market_id_map[market_name]);
             }
             // ---------------------------
@@ -669,7 +669,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                 if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
                 else
                 {
-                    get_market_ids({market_name});
+                    auto response = get_market_ids({market_name});
                     market_id = std::to_string(market_id_map[market_name]);
                 }
 
@@ -879,7 +879,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
     return resp;
 }
 
-nlohmann::json GCapiClient::cancel_order(std::string order_id, std::string tr_account_id)
+nlohmann::json GCapiClient::cancel_order(const std::string& order_id, std::string tr_account_id)
 {
     /* Cancels an Active Order
        :order_id: Order ID of the Order to Cancel
