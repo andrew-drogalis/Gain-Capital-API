@@ -35,7 +35,7 @@ GCapiClient::GCapiClient(const std::string& username, const std::string& passwor
 bool GCapiClient::authenticate_session()
 {
     /* * This is the first authentication of the user.
-       * Required to run before any other API request. */
+       * This method MUST run before any other API request. */
     if (! validate_auth_payload()) { return false; }
 
     cpr::Header const headers {{"Content-Type", "application/json"}};
@@ -102,7 +102,7 @@ bool GCapiClient::set_trading_account_id()
             nlohmann::json resp = nlohmann::json::parse(r.text);
             trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
             client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
-            
+
             return true;
         }
         catch (const cpr::Response& r)
@@ -197,7 +197,7 @@ void GCapiClient::initialize_logging_file(const std::string& file_path, const st
 {
     /* * Optional: Boost Logging to File */
     std::string file_name_concat = file_path + "/" + file_name + ".log";
-    boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
+    static auto file_sink = boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
                              boost::log::keywords::auto_flush = true);
 
     std::transform(severity.begin(), severity.end(), severity.begin(), ::tolower);

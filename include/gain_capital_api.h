@@ -42,9 +42,9 @@ class GCapiClient
     // UTILITIES
     // =================================================================================================================
 
-    void add_console_log(const bool enable) noexcept;
+    static void add_console_log(const bool enable) noexcept;
 
-    void initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity = "debug") noexcept;
+    static void initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity = "debug") noexcept;
 
     bool validate_session_header() const noexcept;
 

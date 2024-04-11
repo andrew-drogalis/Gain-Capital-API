@@ -23,7 +23,7 @@ int main()
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
 
     // Send Logging to STD Ouput
-    gc_api.add_console_log(true);
+    gaincapital::GCapiClient::add_console_log(true);
 
     // Required for First Authentication
     if (! gc_api.authenticate_session()) { return 1; }

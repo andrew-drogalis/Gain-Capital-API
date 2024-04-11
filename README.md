@@ -55,13 +55,13 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
 ```c
     // Send Logging to STD Output
-    gc_api.add_console_log(true);
+    gaincapital::GCapiClient::add_console_log(true);
 
     // Send Logging to File
     std::string const file_path = "/home/user";
     std::string const file_name = "gain_capital";
     std::string const severity_level = "debug";
-    gc_api.initialize_logging_file(file_path, file_name, severity_level);
+    gaincapital::GCapiClient::initialize_logging_file(file_path, file_name, severity_level);
 ```
 
 ### Authenticating Session
