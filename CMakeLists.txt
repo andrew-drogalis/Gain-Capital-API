@@ -51,6 +51,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   endif()
   # myproject_enable_include_what_you_use()
   # myproject_enable_cppcheck(FALSE "X")
+  gcc_analyzer_enable()
   myproject_enable_coverage(${PROJECT_NAME})
   myproject_enable_sanitizers(
     ${PROJECT_NAME}
