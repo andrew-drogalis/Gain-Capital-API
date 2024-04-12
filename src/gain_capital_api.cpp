@@ -76,7 +76,7 @@ bool GCapiClient::authenticate_session()
         catch (const std::exception& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Authentication Error - " << e.what();
-            break;
+            return false;
         }
         catch (...)
         {
@@ -123,7 +123,7 @@ bool GCapiClient::set_trading_account_id()
         catch (const std::exception& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account Error - " << e.what();
-            break;
+            return false;
         }
         catch (...)
         {
@@ -176,7 +176,7 @@ bool GCapiClient::validate_session()
         catch (const std::exception& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - " << e.what();
-            break;
+            return false;
         }
         catch (...)
         {
@@ -392,7 +392,6 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(const std::vect
             catch (const std::exception& e)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Market ID for " << market_name << " - " << e.what();
-                break;
             }
             catch (...)
             {
@@ -435,7 +434,6 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const 
             catch (const std::exception& e)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Market ID for " << market_name << " - " << e.what();
-                break;
             }
             catch (...)
             {

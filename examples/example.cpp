@@ -3,6 +3,7 @@
 
 #include "gain_capital_api.h"
 
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <unordered_map>
