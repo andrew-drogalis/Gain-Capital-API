@@ -27,8 +27,6 @@
 namespace gaincapital
 {
 
-GCapiClient::GCapiClient() {}
-
 GCapiClient::GCapiClient(const std::string& username, const std::string& password, const std::string& apikey) noexcept
 {
     auth_payload = {{"UserName", username}, {"Password", password}, {"AppKey", apikey}};
@@ -260,7 +258,7 @@ void GCapiClient::set_testing_rest_urls(const std::string& url) noexcept { rest_
 // =================================================================================================================
 nlohmann::json GCapiClient::get_account_info(const std::string& param)
 {
-    /* Gets trading account general information
+    /* Gets the trading account's general information.
        :param: retrieve specific information (e.g. TradingAccountId)
        :return: trading account information
     */
@@ -313,7 +311,7 @@ nlohmann::json GCapiClient::get_account_info(const std::string& param)
 
 nlohmann::json GCapiClient::get_margin_info(const std::string& param)
 {
-    /*  Gets trading account margin information
+    /*  Gets the trading account's margin information.
         :param: retrieve specific information (e.g. Cash)
         :return: trading account margin information
         -- Example of param options
@@ -368,7 +366,7 @@ nlohmann::json GCapiClient::get_margin_info(const std::string& param)
 
 std::unordered_map<std::string, int> GCapiClient::get_market_ids(const std::vector<std::string>& market_name_list)
 {
-    /* Gets market information
+    /* Gets the market information.
        :market_name_list: market name (e.g. USD/CAD)
        :return: market information
     */
@@ -408,7 +406,7 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(const std::vect
 
 std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const std::vector<std::string>& market_name_list, const std::string& param)
 {
-    /* Gets market information
+    /* Gets the market information.
        :market_name_list: market name (e.g. USD/CAD)
        :param: retrieve specific information (e.g. MarketId)
        :return: market information
@@ -668,10 +666,10 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(const std:
 std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id)
 {
     /*  Makes a new trade order
-        :param trade_map: JSON object formatted as in the example below
+        :param trade_map: JSON object formatted as shown in the example below
         :param type: Limit or Market order type
         :param trading_acc_id: trading account ID
-        :return: error_list: list of symbol name that failed to place trade
+        :return: error_list: list of symbol names that failed to be executed
         // Market Order
         TRADE_MAP = {{"MARKET_NAME",{
             {"Direction","buy/sell"},
@@ -686,14 +684,12 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
             {'LimitPrice", "1.3521 or 0 for None"}}
             }}
     */
-    std::vector<std::string> error_list, input_error_list;
+    std::vector<std::string> error_list, input_error_list, market_name_list;
+    for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) { market_name_list.push_back(it.key()); }
     // -------------------
     if (validate_session())
     {
         if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
-
-        std::vector<std::string> market_name_list = {};
-        for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) { market_name_list.push_back(it.key()); }
 
         std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 
@@ -837,6 +833,10 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
             if (! market_name_list.empty()) { sleep(1); }
         }
     }
+    else
+    {
+        return market_name_list;
+    }
     // -------------------
     error_list.insert(error_list.end(), input_error_list.begin(), input_error_list.end());
     return error_list;
@@ -844,7 +844,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
 
 nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
 {
-    /* List of Open Positions in Trading Account
+    /* List of Open Positions in the trading account.
        :param trading_acc_id: trading account ID
        :return JSON response
     */
@@ -894,7 +894,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
 
 nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
 {
-    /* List of Active Order in Trading Account
+    /* List of Active Order in the trading account.
        :param trading_acc_id: trading account ID
        :return JSON response
     */

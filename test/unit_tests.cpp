@@ -119,7 +119,9 @@ TEST(GainCapitalUnit, TradeOrderAPICallFailEarly) {
 
     trades_map_limit["USD/CAD"] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", 1.0}, {"StopPrice", 1.2}};
 
-    EXPECT_EQ(g.trade_order(trades_map_limit, "LIMIT"), (std::vector<std::string>()));
+    std::vector<std::string> response = {"USD/CAD"};
+
+    EXPECT_EQ(g.trade_order(trades_map_limit, "LIMIT"), response);
 }
 
 TEST(GainCapitalUnit, ListOpenPositionsAPICallFailEarly) {
