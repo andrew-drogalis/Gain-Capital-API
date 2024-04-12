@@ -27,9 +27,16 @@ class GCapiClient
 
     GCapiClient(const std::string& username, const std::string& password, const std::string& appkey) noexcept;
 
+    ~GCapiClient() = default;
+
+    // Move ONLY | No Copy Constructor 
     GCapiClient(const GCapiClient& obj) = delete;
 
     GCapiClient& operator=(const GCapiClient& obj) = delete;
+
+    GCapiClient(GCapiClient&& obj) = default;
+
+    GCapiClient& operator=(GCapiClient&& obj) = default;
 
     // =================================================================================================================
     // AUTHENTICATION

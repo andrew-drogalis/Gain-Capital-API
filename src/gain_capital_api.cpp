@@ -815,17 +815,18 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
                 }
                 catch (const cpr::Response& r)
                 {
-                    error_list.push_back(market_name);
                     BOOST_LOG_TRIVIAL(error) << "Order Response: Status Code: " << r.status_code << "; Message: " << r.text;
+                    if (r.status_code == 500 || r.status_code == 504)
+                    {
+                        error_list.push_back(market_name);
+                    }
                 }
                 catch (const std::exception& e)
                 {
-                    error_list.push_back(market_name);
                     BOOST_LOG_TRIVIAL(error) << "Error Placing Trade Order for " << market_name << " - " << e.what();
                 }
                 catch (...)
                 {
-                    error_list.push_back(market_name);
                     BOOST_LOG_TRIVIAL(error) << "Error Placing Trade Order for " << market_name;
                 }
             }
