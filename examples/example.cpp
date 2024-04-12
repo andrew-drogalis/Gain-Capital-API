@@ -3,13 +3,12 @@
 
 #include "gain_capital_api.h"
 
-#include "json/json.hpp"
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-using namespace std;
+#include "json/json.hpp"
 
 int main()
 {

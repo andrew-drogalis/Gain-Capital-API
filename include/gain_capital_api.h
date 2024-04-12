@@ -4,12 +4,13 @@
 #ifndef GAIN_CAPITAL_API_H
 #define GAIN_CAPITAL_API_H
 
-#include "cpr/cpr.h"
-
-#include "json/json.hpp"
+#include <cstddef>// for size_t
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "cpr/cprtypes.h"// for Header
+#include "json/json.hpp"
 
 namespace gaincapital
 {

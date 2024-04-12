@@ -3,20 +3,26 @@
 
 #include "gain_capital_api.h"
 
-#include "boost/log/trivial.hpp"
-#include "boost/log/utility/setup/common_attributes.hpp"
-#include "boost/log/utility/setup/console.hpp"
-#include "boost/log/utility/setup/file.hpp"
-#include "cpr/cpr.h"
+#include <algorithm>                                     // for transform
+#include <bits/chrono.h>                                 // for system_clock
+#include <ctype.h>                                       // for toupper
+#include <exception>                                     // for exception
+#include <initializer_list>                              // for initialize...
+#include <iostream>                                      // for operator<<
+#include <string>                                        // for basic_string
+#include <unistd.h>                                      // for sleep
+#include <unordered_map>                                 // for unordered_map
+#include <utility>                                       // for pair
+#include <vector>                                        // for vector
 
-#include "json/json.hpp"
-#include <algorithm>
-#include <chrono>
-#include <exception>
-#include <iostream>
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include "boost/log/trivial.hpp"                        // for BOOST_LOG_...
+#include "boost/log/utility/setup/common_attributes.hpp"// for add_common...
+#include "boost/log/utility/setup/console.hpp"          // for add_consol...
+#include "boost/log/utility/setup/file.hpp"             // for add_file_log
+#include "cpr/api.h"                                    // for Get, Post
+#include "cpr/body.h"                                   // for Body
+#include "cpr/response.h"                               // for Response
+#include "json/json.hpp"                                // for json_ref
 
 namespace gaincapital
 {
@@ -35,7 +41,7 @@ GCapiClient::GCapiClient(const std::string& username, const std::string& passwor
 bool GCapiClient::authenticate_session()
 {
     /* * This is the first authentication of the user.
-       * This method MUST run before any other API request. */
+     * This method MUST run before any other API request. */
     if (! validate_auth_payload()) { return false; }
 
     cpr::Header const headers {{"Content-Type", "application/json"}};
@@ -152,7 +158,8 @@ bool GCapiClient::validate_session()
             if (r.status_code != 200) { throw r; }
             resp = nlohmann::json::parse(r.text);
 
-            if (resp["isAuthenticated"] == false) { 
+            if (resp["isAuthenticated"] == false)
+            {
                 if (! authenticate_session()) { return false; }
             }
             break;
@@ -199,8 +206,9 @@ void GCapiClient::initialize_logging_file(const std::string& file_path, const st
 {
     /* * Optional: Boost Logging to File */
     std::string file_name_concat = file_path + "/" + file_name + ".log";
-    static auto file_sink = boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
-                             boost::log::keywords::auto_flush = true);
+    static auto file_sink =
+        boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
+                                 boost::log::keywords::auto_flush = true);
 
     std::transform(severity.begin(), severity.end(), severity.begin(), ::tolower);
 
@@ -696,7 +704,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std:
         }
 
         std::size_t current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
-                                    std::chrono::system_clock::period::den;
+                                   std::chrono::system_clock::period::den;
         int const OFFSET_SECONDS = 8;
         std::size_t const stop_time = current_time + OFFSET_SECONDS;
 
