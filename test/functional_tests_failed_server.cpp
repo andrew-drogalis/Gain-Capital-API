@@ -129,7 +129,7 @@ TEST(GainCapitalFunctional, AuthenticateSessionFailedServerTest) {
 TEST(GainCapitalFunctional, GetAccountInfoFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     nlohmann::json response{};
 
@@ -139,7 +139,7 @@ TEST(GainCapitalFunctional, GetAccountInfoFailedServerTest) {
 TEST(GainCapitalFunctional, GetMarginInfoFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     nlohmann::json response{};
 
@@ -149,7 +149,7 @@ TEST(GainCapitalFunctional, GetMarginInfoFailedServerTest) {
 TEST(GainCapitalFunctional, GetMarketIDsFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     std::unordered_map<std::string, int> response = {};
 
@@ -159,7 +159,7 @@ TEST(GainCapitalFunctional, GetMarketIDsFailedServerTest) {
 TEST(GainCapitalFunctional, GetMarketInfoFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     std::unordered_map<std::string, std::string> response = {};
 
@@ -170,7 +170,7 @@ TEST(GainCapitalFunctional, GetMarketInfoFailedServerTest) {
 TEST(GainCapitalFunctional, GetPricesFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     std::unordered_map<std::string, nlohmann::json> response = {};
 
@@ -180,7 +180,7 @@ TEST(GainCapitalFunctional, GetPricesFailedServerTest) {
 TEST(GainCapitalFunctional, GetOHLCFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     std::unordered_map<std::string, nlohmann::json> response = {};
 
@@ -190,7 +190,7 @@ TEST(GainCapitalFunctional, GetOHLCFailedServerTest) {
 TEST(GainCapitalFunctional, TradeOrderFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     std::vector<std::string> response{"TEST_MARKET"};
 
@@ -204,7 +204,7 @@ TEST(GainCapitalFunctional, TradeOrderFailedServerTest) {
 TEST(GainCapitalFunctional, ListOpenPositionsFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     nlohmann::json response{};
 
@@ -214,7 +214,7 @@ TEST(GainCapitalFunctional, ListOpenPositionsFailedServerTest) {
 TEST(GainCapitalFunctional, ListActiveFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     nlohmann::json response{};
 
@@ -224,7 +224,7 @@ TEST(GainCapitalFunctional, ListActiveFailedServerTest) {
 TEST(GainCapitalFunctional, CancelOrderFailedServerTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
-    g.authenticate_session();
+    bool res = g.authenticate_session();
 
     nlohmann::json response{};
 
