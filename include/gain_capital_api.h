@@ -34,9 +34,9 @@ class GCapiClient
     // AUTHENTICATION
     // =================================================================================================================
 
-    bool authenticate_session();
+    [[nodiscard]] bool authenticate_session();
 
-    bool validate_session();
+    [[nodiscard]] bool validate_session();
 
     // =================================================================================================================
     // UTILITIES
@@ -46,11 +46,11 @@ class GCapiClient
 
     static void initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity = "debug") noexcept;
 
-    bool validate_session_header() const noexcept;
+    [[nodiscard]] bool validate_session_header() const noexcept;
 
-    bool validate_auth_payload() const noexcept;
+    [[nodiscard]] bool validate_auth_payload() const noexcept;
 
-    bool validate_account_ids() const noexcept;
+    [[nodiscard]] bool validate_account_ids() const noexcept;
 
     void set_testing_rest_urls(const std::string& url) noexcept;
 
@@ -94,7 +94,7 @@ class GCapiClient
     // AUTHENTICATION
     // =================================================================================================================
 
-    bool set_trading_account_id();
+    [[nodiscard]] bool set_trading_account_id();
 };
 
 }// namespace gaincapital

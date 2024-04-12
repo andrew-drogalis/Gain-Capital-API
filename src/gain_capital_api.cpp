@@ -152,7 +152,9 @@ bool GCapiClient::validate_session()
             if (r.status_code != 200) { throw r; }
             resp = nlohmann::json::parse(r.text);
 
-            if (resp["isAuthenticated"] == false) { authenticate_session(); }
+            if (resp["isAuthenticated"] == false) { 
+                if (! authenticate_session()) { return false; }
+            }
             break;
         }
         catch (const cpr::Response& r)
