@@ -192,7 +192,7 @@ bool GCapiClient::validate_session()
 // UTILITIES
 // =================================================================================================================
 
-void GCapiClient::add_console_log(const bool enable) noexcept
+void GCapiClient::add_console_log(const bool enable)
 {
     /* Optional: Boost Logging to STD Output */
     static auto console_sink = boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
@@ -200,7 +200,7 @@ void GCapiClient::add_console_log(const bool enable) noexcept
     if (! enable) { boost::log::core::get()->remove_sink(console_sink); }
 }
 
-void GCapiClient::initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity) noexcept
+void GCapiClient::initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity)
 {
     /* * Optional: Boost Logging to File */
     std::string file_name_concat = file_path + "/" + file_name + ".log";
@@ -278,7 +278,7 @@ nlohmann::json GCapiClient::get_account_info(const std::string& param)
                 trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
                 client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
 
-                if (! param.empty()) { return resp["tradingAccounts"][0][param]; }
+                if (! param.empty() && resp["tradingAccounts"][0].contains(param)) { return resp["tradingAccounts"][0][param]; }
                 break;
             }
             catch (const cpr::Response& r)
@@ -333,7 +333,7 @@ nlohmann::json GCapiClient::get_margin_info(const std::string& param)
                 if (r.status_code != 200) { throw r; }
                 resp = nlohmann::json::parse(r.text);
 
-                if (! param.empty()) { return resp[param]; }
+                if (! param.empty() && resp.contains(param)) { return resp[param]; }
                 break;
             }
             catch (const cpr::Response& r)
@@ -424,7 +424,8 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const 
                 nlohmann::json resp = nlohmann::json::parse(r.text);
 
                 if (param.empty()) { response_map[market_name] = resp["Markets"][0]["MarketId"].dump(); }
-                else { response_map[market_name] = resp["Markets"][0][param].dump(); }
+                else if (! param.empty() && resp["Markets"][0].contains(param)) { response_map[market_name] = resp["Markets"][0][param].dump(); }
+                else { response_map[market_name] = resp["Markets"][0].dump(); }
             }
             catch (const cpr::Response& r)
             {

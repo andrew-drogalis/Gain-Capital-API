@@ -23,20 +23,20 @@ class GCapiClient
     std::string client_account_id = "";
     std::unordered_map<std::string, int> market_id_map;
 
-    GCapiClient() = default;
+    GCapiClient() noexcept = default;
 
     GCapiClient(const std::string& username, const std::string& password, const std::string& appkey) noexcept;
 
-    ~GCapiClient() = default;
+    ~GCapiClient() noexcept = default;
 
     // Move ONLY | No Copy Constructor 
     GCapiClient(const GCapiClient& obj) = delete;
 
     GCapiClient& operator=(const GCapiClient& obj) = delete;
 
-    GCapiClient(GCapiClient&& obj) = default;
+    GCapiClient(GCapiClient&& obj) noexcept = default;
 
-    GCapiClient& operator=(GCapiClient&& obj) = default;
+    GCapiClient& operator=(GCapiClient&& obj) noexcept = default;
 
     // =================================================================================================================
     // AUTHENTICATION
@@ -50,9 +50,9 @@ class GCapiClient
     // UTILITIES
     // =================================================================================================================
 
-    static void add_console_log(const bool enable) noexcept;
+    static void add_console_log(const bool enable);
 
-    static void initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity = "debug") noexcept;
+    static void initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity = "debug");
 
     [[nodiscard]] bool validate_session_header() const noexcept;
 
