@@ -188,7 +188,7 @@ bool GCapiClient::validate_session()
 // UTILITIES
 // =================================================================================================================
 
-void GCapiClient::add_console_log(const bool enable) noexcept
+void GCapiClient::add_console_log(const bool enable)
 {
     /* Optional: Boost Logging to STD Output */
     static auto console_sink = boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
@@ -196,7 +196,7 @@ void GCapiClient::add_console_log(const bool enable) noexcept
     if (! enable) { boost::log::core::get()->remove_sink(console_sink); }
 }
 
-void GCapiClient::initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity) noexcept
+void GCapiClient::initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity)
 {
     /* * Optional: Boost Logging to File */
     std::string file_name_concat = file_path + "/" + file_name + ".log";
@@ -221,7 +221,7 @@ void GCapiClient::initialize_logging_file(const std::string& file_path, const st
     boost::log::add_common_attributes();
 }
 
-bool GCapiClient::validate_session_header() const noexcept
+bool GCapiClient::validate_session_header() const
 {
     if (session_header.empty())
     {
@@ -231,7 +231,7 @@ bool GCapiClient::validate_session_header() const noexcept
     return true;
 }
 
-bool GCapiClient::validate_auth_payload() const noexcept
+bool GCapiClient::validate_auth_payload() const
 {
     if (auth_payload.empty())
     {
