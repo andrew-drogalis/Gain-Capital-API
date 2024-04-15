@@ -247,7 +247,7 @@ bool GCapiClient::validate_account_ids() const noexcept
     return true;
 }
 
-void GCapiClient::set_testing_rest_urls(const std::string& url) noexcept { rest_url = rest_url_v2 = url; }
+void GCapiClient::set_testing_rest_urls(const std::string& url) { rest_url = rest_url_v2 = url; }
 
 // =================================================================================================================
 // API CALLS

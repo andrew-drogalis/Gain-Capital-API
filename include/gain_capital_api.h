@@ -60,7 +60,7 @@ class GCapiClient
 
     [[nodiscard]] bool validate_account_ids() const noexcept;
 
-    void set_testing_rest_urls(const std::string& url) noexcept;
+    void set_testing_rest_urls(const std::string& url);
 
     // =================================================================================================================
     // API CALLS
