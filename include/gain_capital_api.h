@@ -4,13 +4,13 @@
 #ifndef GAIN_CAPITAL_API_H
 #define GAIN_CAPITAL_API_H
 
-#include <cstddef>// for size_t
-#include <string>
-#include <unordered_map>
-#include <vector>
+#include <cstddef>      // for size_t
+#include <string>       // for basic_string
+#include <unordered_map>// for unordered_map
+#include <vector>       // for vector
 
 #include "cpr/cprtypes.h"// for Header
-#include "json/json.hpp"
+#include "json/json.hpp" // for json_ref
 
 namespace gaincapital
 {
@@ -19,8 +19,8 @@ class GCapiClient
 {
 
   public:
-    std::string trading_account_id = "";
-    std::string client_account_id = "";
+    std::string trading_account_id;
+    std::string client_account_id;
     std::unordered_map<std::string, int> market_id_map;
 
     GCapiClient() = default;
@@ -29,7 +29,7 @@ class GCapiClient
 
     ~GCapiClient() = default;
 
-    // Move ONLY | No Copy Constructor 
+    // Move ONLY | No Copy Constructor
     GCapiClient(const GCapiClient& obj) = delete;
 
     GCapiClient& operator=(const GCapiClient& obj) = delete;
