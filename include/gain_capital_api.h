@@ -23,11 +23,11 @@ class GCapiClient
     std::string client_account_id = "";
     std::unordered_map<std::string, int> market_id_map;
 
-    GCapiClient() noexcept = default;
+    GCapiClient() = default;
 
     GCapiClient(const std::string& username, const std::string& password, const std::string& appkey);
 
-    ~GCapiClient() noexcept = default;
+    ~GCapiClient() = default;
 
     // Move ONLY | No Copy Constructor 
     GCapiClient(const GCapiClient& obj) = delete;
