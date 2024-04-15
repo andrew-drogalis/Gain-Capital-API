@@ -25,7 +25,7 @@ class GCapiClient
 
     GCapiClient() noexcept = default;
 
-    GCapiClient(const std::string& username, const std::string& password, const std::string& appkey) noexcept;
+    GCapiClient(const std::string& username, const std::string& password, const std::string& appkey);
 
     ~GCapiClient() noexcept = default;
 

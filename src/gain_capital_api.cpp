@@ -27,7 +27,7 @@
 namespace gaincapital
 {
 
-GCapiClient::GCapiClient(const std::string& username, const std::string& password, const std::string& apikey) noexcept
+GCapiClient::GCapiClient(const std::string& username, const std::string& password, const std::string& apikey)
 {
     auth_payload = {{"UserName", username}, {"Password", password}, {"AppKey", apikey}};
 }
