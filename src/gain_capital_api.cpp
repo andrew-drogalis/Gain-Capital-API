@@ -650,7 +650,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(const std:
     return response_map;
 }
 
-std::vector<std::string> GCapiClient::trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id)
+std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id)
 {
     /*  Makes a new trade order
         :param trade_map: JSON object formatted as shown in the example below

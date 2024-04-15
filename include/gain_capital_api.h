@@ -83,7 +83,7 @@ class GCapiClient
                                                                            const std::size_t num_ticks = 1, std::size_t span = 1,
                                                                            const std::size_t from_ts = 0, const std::size_t to_ts = 0);
 
-    [[nodiscard]] std::vector<std::string> trade_order(nlohmann::json trade_map, std::string type, std::string tr_account_id = "");
+    [[nodiscard]] std::vector<std::string> trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id = "");
 
     [[nodiscard]] nlohmann::json list_open_positions(std::string tr_account_id = "");
 
