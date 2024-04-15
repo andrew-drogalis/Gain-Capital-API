@@ -34,9 +34,9 @@ class GCapiClient
 
     GCapiClient& operator=(const GCapiClient& obj) = delete;
 
-    GCapiClient(GCapiClient&& obj) noexcept = default;
+    GCapiClient(GCapiClient&& obj) = default;
 
-    GCapiClient& operator=(GCapiClient&& obj) noexcept = default;
+    GCapiClient& operator=(GCapiClient&& obj) = default;
 
     // =================================================================================================================
     // AUTHENTICATION
