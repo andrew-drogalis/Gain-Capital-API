@@ -27,7 +27,7 @@
 namespace gaincapital
 {
 
-GCapiClient::GCapiClient(const std::string& username, const std::string& password, const std::string& apikey)
+GCapiClient::GCapiClient(std::string const& username, std::string const& password, std::string const& apikey)
 {
     auth_payload = {{"UserName", username}, {"Password", password}, {"AppKey", apikey}};
 }
@@ -62,7 +62,7 @@ bool GCapiClient::authenticate_session()
             resp_session = resp["session"];
             break;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Authentication Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -73,7 +73,7 @@ bool GCapiClient::authenticate_session()
             }
             return false;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Authentication Error - " << e.what();
             return false;
@@ -109,7 +109,7 @@ bool GCapiClient::set_trading_account_id()
 
             return true;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -120,7 +120,7 @@ bool GCapiClient::set_trading_account_id()
             }
             return false;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account Error - " << e.what();
             return false;
@@ -158,7 +158,7 @@ bool GCapiClient::validate_session()
             if (resp["isAuthenticated"] == false && ! authenticate_session()) { return false; }
             break;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -169,7 +169,7 @@ bool GCapiClient::validate_session()
             }
             return false;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - " << e.what();
             return false;
@@ -188,7 +188,7 @@ bool GCapiClient::validate_session()
 // UTILITIES
 // =================================================================================================================
 
-void GCapiClient::add_console_log(const bool enable)
+void GCapiClient::add_console_log(bool const enable)
 {
     /* Optional: Boost Logging to STD Output */
     static auto console_sink = boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
@@ -196,7 +196,7 @@ void GCapiClient::add_console_log(const bool enable)
     if (! enable) { boost::log::core::get()->remove_sink(console_sink); }
 }
 
-void GCapiClient::initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity)
+void GCapiClient::initialize_logging_file(std::string const& file_path, std::string const& file_name, std::string severity)
 {
     /* * Optional: Boost Logging to File */
     std::string file_name_concat = file_path + "/" + file_name + ".log";
@@ -247,12 +247,12 @@ bool GCapiClient::validate_account_ids() const noexcept
     return true;
 }
 
-void GCapiClient::set_testing_rest_urls(const std::string& url) { rest_url = rest_url_v2 = url; }
+void GCapiClient::set_testing_rest_urls(std::string const& url) { rest_url = rest_url_v2 = url; }
 
 // =================================================================================================================
 // API CALLS
 // =================================================================================================================
-nlohmann::json GCapiClient::get_account_info(const std::string& param)
+nlohmann::json GCapiClient::get_account_info(std::string const& param)
 {
     /* Gets the trading account's general information.
        :param: retrieve specific information (e.g. TradingAccountId)
@@ -277,7 +277,7 @@ nlohmann::json GCapiClient::get_account_info(const std::string& param)
             if (! param.empty() && resp["tradingAccounts"][0].contains(param)) { return resp["tradingAccounts"][0][param]; }
             break;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Account Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -288,7 +288,7 @@ nlohmann::json GCapiClient::get_account_info(const std::string& param)
             }
             break;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Get Account Info Error - " << e.what();
             break;
@@ -304,7 +304,7 @@ nlohmann::json GCapiClient::get_account_info(const std::string& param)
     return resp;
 }
 
-nlohmann::json GCapiClient::get_margin_info(const std::string& param)
+nlohmann::json GCapiClient::get_margin_info(std::string const& param)
 {
     /*  Gets the trading account's margin information.
         :param: retrieve specific information (e.g. Cash)
@@ -330,7 +330,7 @@ nlohmann::json GCapiClient::get_margin_info(const std::string& param)
             if (! param.empty() && resp.contains(param)) { return resp[param]; }
             break;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Margin Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -341,7 +341,7 @@ nlohmann::json GCapiClient::get_margin_info(const std::string& param)
             }
             break;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Get Margin Info Error - " << e.what();
             break;
@@ -357,7 +357,7 @@ nlohmann::json GCapiClient::get_margin_info(const std::string& param)
     return resp;
 }
 
-std::unordered_map<std::string, int> GCapiClient::get_market_ids(const std::vector<std::string>& market_name_list)
+std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std::string> const& market_name_list)
 {
     /* Gets the market information.
        :market_name_list: market name (e.g. USD/CAD)
@@ -377,12 +377,12 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(const std::vect
             int const market_id = static_cast<int>(resp["Markets"][0]["MarketId"]);
             market_id_map[market_name] = market_id;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code
                                      << "; Message: " << r.text;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Market ID for " << market_name << " - " << e.what();
         }
@@ -395,7 +395,7 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(const std::vect
     return market_id_map;
 }
 
-std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const std::vector<std::string>& market_name_list, const std::string& param)
+std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::vector<std::string> const& market_name_list, std::string const& param)
 {
     /* Gets the market information.
        :market_name_list: market name (e.g. USD/CAD)
@@ -419,12 +419,12 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const 
             else if (! param.empty() && resp["Markets"][0].contains(param)) { response_map[market_name] = resp["Markets"][0][param].dump(); }
             else { response_map[market_name] = resp["Markets"][0].dump(); }
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code
                                      << "; Message: " << r.text;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Market ID for " << market_name << " - " << e.what();
         }
@@ -437,8 +437,8 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(const 
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const std::vector<std::string>& market_name_list, const std::size_t num_ticks,
-                                                                        const std::size_t from_ts, const std::size_t to_ts, std::string price_type)
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vector<std::string> const& market_name_list, std::size_t const num_ticks,
+                                                                        std::size_t const from_ts, std::size_t const to_ts, std::string price_type)
 {
     /*  Get prices
         :param market_name_list: market name (e.g. USD/CAD)
@@ -501,7 +501,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const st
                 response_map[market_name] = resp["PriceTicks"];
                 break;
             }
-            catch (const cpr::Response& r)
+            catch (cpr::Response const& r)
             {
                 BOOST_LOG_TRIVIAL(error) << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code
                                          << "; Message: " << r.text;
@@ -513,7 +513,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const st
                 }
                 break;
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Price for " << market_name << " - " << e.what();
                 break;
@@ -530,9 +530,9 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(const st
     return response_map;
 }
 
-std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(const std::vector<std::string>& market_name_list, std::string interval,
-                                                                      const std::size_t num_ticks, std::size_t span, const std::size_t from_ts,
-                                                                      const std::size_t to_ts)
+std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vector<std::string> const& market_name_list, std::string interval,
+                                                                      std::size_t const num_ticks, std::size_t span, std::size_t const from_ts,
+                                                                      std::size_t const to_ts)
 {
     /*  Get the open, high, low, close of a specific market_id
         :param market_name_list: market name (e.g. USD/CAD)
@@ -621,7 +621,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(const std:
                 response_map[market_name] = resp["PriceBars"];
                 break;
             }
-            catch (const cpr::Response& r)
+            catch (cpr::Response const& r)
             {
                 BOOST_LOG_TRIVIAL(error) << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code
                                          << "; Message: " << r.text;
@@ -633,7 +633,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(const std:
                 }
                 break;
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 BOOST_LOG_TRIVIAL(fatal) << "Error Fetching OHLC for " << market_name << " - " << e.what();
                 break;
@@ -796,12 +796,12 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                 // ---------------------------
                 if (static_cast<int>(resp["OrderId"]) == 0) { error_list.push_back(market_name); }
             }
-            catch (const cpr::Response& r)
+            catch (cpr::Response const& r)
             {
                 BOOST_LOG_TRIVIAL(error) << "Order Response: Status Code: " << r.status_code << "; Message: " << r.text;
                 if (r.status_code == 500 || r.status_code == 504) { error_list.push_back(market_name); }
             }
-            catch (const std::exception& e)
+            catch (std::exception const& e)
             {
                 BOOST_LOG_TRIVIAL(error) << "Error Placing Trade Order for " << market_name << " - " << e.what();
             }
@@ -843,7 +843,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
             resp = nlohmann::json::parse(r.text)["OpenPositions"];
             break;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Open Positions Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -854,7 +854,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
             }
             break;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "List Open Positions Exception - " << e.what();
             break;
@@ -894,7 +894,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
             resp = nlohmann::json::parse(r.text)["ActiveOrders"];
             break;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Active Orders Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -905,7 +905,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
             }
             break;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "List Active Order Exception - " << e.what();
             break;
@@ -921,7 +921,7 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
     return resp;
 }
 
-nlohmann::json GCapiClient::cancel_order(const std::string& order_id, std::string tr_account_id)
+nlohmann::json GCapiClient::cancel_order(std::string const& order_id, std::string tr_account_id)
 {
     /* Cancels an Active Order
        :order_id: Order ID of the Order to Cancel
@@ -946,7 +946,7 @@ nlohmann::json GCapiClient::cancel_order(const std::string& order_id, std::strin
             resp = nlohmann::json::parse(r.text);
             break;
         }
-        catch (const cpr::Response& r)
+        catch (cpr::Response const& r)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Cancel Order Error - Status Code: " << r.status_code << "; Message: " << r.text;
             if (! iteration && (r.status_code == 500 || r.status_code == 504))
@@ -957,7 +957,7 @@ nlohmann::json GCapiClient::cancel_order(const std::string& order_id, std::strin
             }
             break;
         }
-        catch (const std::exception& e)
+        catch (std::exception const& e)
         {
             BOOST_LOG_TRIVIAL(fatal) << "Cancel Order Exception - " << e.what();
             break;

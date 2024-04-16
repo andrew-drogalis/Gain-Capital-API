@@ -25,14 +25,14 @@ class GCapiClient
 
     GCapiClient() = default;
 
-    GCapiClient(const std::string& username, const std::string& password, const std::string& appkey);
+    GCapiClient(std::string const& username, std::string const& password, std::string const& appkey);
 
     ~GCapiClient() = default;
 
     // Move ONLY | No Copy Constructor
-    GCapiClient(const GCapiClient& obj) = delete;
+    GCapiClient(GCapiClient const& obj) = delete;
 
-    GCapiClient& operator=(const GCapiClient& obj) = delete;
+    GCapiClient& operator=(GCapiClient const& obj) = delete;
 
     GCapiClient(GCapiClient&& obj) = default;
 
@@ -50,9 +50,9 @@ class GCapiClient
     // UTILITIES
     // =================================================================================================================
 
-    static void add_console_log(const bool enable);
+    static void add_console_log(bool const enable);
 
-    static void initialize_logging_file(const std::string& file_path, const std::string& file_name, std::string severity = "debug");
+    static void initialize_logging_file(std::string const& file_path, std::string const& file_name, std::string severity = "debug");
 
     [[nodiscard]] bool validate_session_header() const;
 
@@ -60,28 +60,28 @@ class GCapiClient
 
     [[nodiscard]] bool validate_account_ids() const noexcept;
 
-    void set_testing_rest_urls(const std::string& url);
+    void set_testing_rest_urls(std::string const& url);
 
     // =================================================================================================================
     // API CALLS
     // =================================================================================================================
 
-    [[nodiscard]] nlohmann::json get_account_info(const std::string& param = "");
+    [[nodiscard]] nlohmann::json get_account_info(std::string const& param = "");
 
-    [[nodiscard]] nlohmann::json get_margin_info(const std::string& param = "");
+    [[nodiscard]] nlohmann::json get_margin_info(std::string const& param = "");
 
-    [[nodiscard]] std::unordered_map<std::string, int> get_market_ids(const std::vector<std::string>& positions);
+    [[nodiscard]] std::unordered_map<std::string, int> get_market_ids(std::vector<std::string> const& positions);
 
-    [[nodiscard]] std::unordered_map<std::string, std::string> get_market_info(const std::vector<std::string>& market_name_list,
-                                                                               const std::string& param = "");
+    [[nodiscard]] std::unordered_map<std::string, std::string> get_market_info(std::vector<std::string> const& market_name_list,
+                                                                               std::string const& param = "");
 
-    [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_prices(const std::vector<std::string>& market_name_list,
-                                                                             const std::size_t num_ticks = 1, const std::size_t from_ts = 0,
-                                                                             const std::size_t to_ts = 0, std::string price_type = "MID");
+    [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_prices(std::vector<std::string> const& market_name_list,
+                                                                             std::size_t const num_ticks = 1, std::size_t const from_ts = 0,
+                                                                             std::size_t const to_ts = 0, std::string price_type = "MID");
 
-    [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_ohlc(const std::vector<std::string>& market_name_list, std::string interval,
-                                                                           const std::size_t num_ticks = 1, std::size_t span = 1,
-                                                                           const std::size_t from_ts = 0, const std::size_t to_ts = 0);
+    [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_ohlc(std::vector<std::string> const& market_name_list, std::string interval,
+                                                                           std::size_t const num_ticks = 1, std::size_t span = 1,
+                                                                           std::size_t const from_ts = 0, std::size_t const to_ts = 0);
 
     [[nodiscard]] std::vector<std::string> trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id = "");
 
@@ -89,7 +89,7 @@ class GCapiClient
 
     [[nodiscard]] nlohmann::json list_active_orders(std::string tr_account_id = "");
 
-    nlohmann::json cancel_order(const std::string& order_id, std::string tr_account_id = "");
+    nlohmann::json cancel_order(std::string const& order_id, std::string tr_account_id = "");
 
   private:
     std::string rest_url_v2 = "https://ciapi.cityindex.com/v2";
