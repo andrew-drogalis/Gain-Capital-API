@@ -47,7 +47,7 @@ bool GCapiClient::authenticate_session()
     // ---------------------------
     nlohmann::json resp = make_network_call(headers, url, auth_payload.dump(), "POST", "Authenticate Session");
     if (! resp.contains("statusCode") || ! resp.contains("session")) { return false; }
- 
+
     if (! resp["statusCode"].is_number_integer() || resp["statusCode"] != 0)
     {
         BOOST_LOG_TRIVIAL(fatal) << "API Response is Valid, but Gain Capital Status Code Error: " << resp["statusCode"];
@@ -154,13 +154,10 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_ids(std::ve
         cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
 
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Market IDs - " + market_name);
-        
+
         std::string market_id = resp["Markets"][0]["MarketId"].dump();
 
-        if (market_id != "null")
-        {
-            market_id_map[market_name] = market_id;
-        }
+        if (market_id != "null") { market_id_map[market_name] = market_id; }
     }
     // -------------------
     return market_id_map;
@@ -221,8 +218,13 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
         if (market_id_map.count(market_name)) { market_id = market_id_map[market_name]; }
         else
         {
-            auto DISCARD_response = get_market_ids({market_name});
-            market_id = market_id_map[market_name];
+            auto response = get_market_ids({market_name});
+            if (response.contains(market_name)) { market_id = market_id_map[market_name]; }
+            else
+            {
+                BOOST_LOG_TRIVIAL(error) << "Failure Fetching Market ID for Market - " << market_name;
+                continue;
+            }
         }
         // ---------------------------
         cpr::Url url;
@@ -307,8 +309,13 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
         if (market_id_map.count(market_name)) { market_id = market_id_map[market_name]; }
         else
         {
-            auto DISCARD_response = get_market_ids({market_name});
-            market_id = market_id_map[market_name];
+            auto response = get_market_ids({market_name});
+            if (response.contains(market_name)) { market_id = market_id_map[market_name]; }
+            else
+            {
+                BOOST_LOG_TRIVIAL(error) << "Failure Fetching Market ID for Market - " << market_name;
+                continue;
+            }
         }
         // ---------------------------
         cpr::Url url;
@@ -395,7 +402,13 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
             else
             {
                 auto response = get_market_ids({market_name});
-                market_id = market_id_map[market_name];
+                if (response.contains(market_name)) { market_id = market_id_map[market_name]; }
+                else
+                {
+                    error_list.push_back(market_name);
+                    BOOST_LOG_TRIVIAL(error) << "Failure Fetching Market ID for Market - " << market_name;
+                    continue;
+                }
             }
 
             // Check Trade Map Has Required Fields
@@ -418,15 +431,15 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                 continue;
             }
 
-            float bid_price, offer_price;
+            std::string bid_price, offer_price;
 
             auto bid_response = get_prices({market_name}, 1, 0, 0, "BID");
             auto offer_response = get_prices({market_name}, 1, 0, 0, "ASK");
-            if (bid_response.contains(market_name) && offer_response.contains(market_name)
-                && bid_response[market_name][0]["Price"].is_number() && offer_response[market_name][0]["Price"].is_number())
+            if (bid_response.contains(market_name) && offer_response.contains(market_name) && bid_response[market_name][0]["Price"].dump() != "null" &&
+                offer_response[market_name][0]["Price"].dump() != "null")
             {
-                bid_price = bid_response[market_name][0]["Price"];
-                offer_price = offer_response[market_name][0]["Price"];
+                bid_price = bid_response[market_name][0]["Price"].dump();
+                offer_price = offer_response[market_name][0]["Price"].dump();
             }
             else
             {
@@ -465,8 +478,8 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                 {"Quantity", trade_map[market_name]["Quantity"].dump()},
                 {"MarketName", market_name},
                 {"TradingAccountId", tr_account_id},
-                {"OfferPrice", std::to_string(offer_price)},
-                {"BidPrice", std::to_string(bid_price)},
+                {"OfferPrice", offer_price},
+                {"BidPrice", bid_price},
             };
 
             if (type == "LIMIT")
