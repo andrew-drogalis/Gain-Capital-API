@@ -19,8 +19,8 @@ class GCapiClient
 {
 
   public:
-    std::string trading_account_id;
-    std::string client_account_id;
+    std::string CLASS_trading_account_id;
+    std::string CLASS_client_account_id;
     std::unordered_map<std::string, int> market_id_map;
 
     GCapiClient() = default;
@@ -45,22 +45,6 @@ class GCapiClient
     [[nodiscard]] bool authenticate_session();
 
     [[nodiscard]] bool validate_session();
-
-    // =================================================================================================================
-    // UTILITIES
-    // =================================================================================================================
-
-    static void add_console_log(bool const enable);
-
-    static void initialize_logging_file(std::string const& file_path, std::string const& file_name, std::string severity = "debug");
-
-    [[nodiscard]] bool validate_session_header() const;
-
-    [[nodiscard]] bool validate_auth_payload() const;
-
-    [[nodiscard]] bool validate_account_ids() const noexcept;
-
-    void set_testing_rest_urls(std::string const& url);
 
     // =================================================================================================================
     // API CALLS
@@ -91,6 +75,22 @@ class GCapiClient
 
     nlohmann::json cancel_order(std::string const& order_id, std::string tr_account_id = "");
 
+    // =================================================================================================================
+    // UTILITIES
+    // =================================================================================================================
+
+    static void add_console_log(bool const enable);
+
+    static void initialize_logging_file(std::string const& file_path, std::string const& file_name, std::string severity = "debug");
+
+    [[nodiscard]] bool validate_session_header() const;
+
+    [[nodiscard]] bool validate_auth_payload() const;
+
+    [[nodiscard]] bool validate_account_ids() const noexcept;
+
+    void set_testing_rest_urls(std::string const& url);
+
   private:
     std::string rest_url_v2 = "https://ciapi.cityindex.com/v2";
     std::string rest_url = "https://ciapi.cityindex.com/TradingAPI";
@@ -103,6 +103,13 @@ class GCapiClient
     // =================================================================================================================
 
     [[nodiscard]] bool set_trading_account_id();
+
+    // =================================================================================================================
+    // UTILITIES
+    // =================================================================================================================
+
+    [[nodiscard]] nlohmann::json make_network_call(cpr::Header const& header, cpr::Url const& url, std::string const& payload,
+                                                   std::string const& type, std::string const& func_name);
 };
 
 }// namespace gaincapital

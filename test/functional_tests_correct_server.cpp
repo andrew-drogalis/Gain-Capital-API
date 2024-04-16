@@ -124,6 +124,8 @@ TEST(GainCapitalFunctional, AuthenticateSessionTest) {
     g.set_testing_rest_urls("http://localhost:9201");
 
     EXPECT_EQ(g.authenticate_session(), true);
+    EXPECT_EQ(g.CLASS_trading_account_id, "\"TradingTestID\"");
+    EXPECT_EQ(g.CLASS_client_account_id, "\"ClientTestID\"");
 }
 
 TEST(GainCapitalFunctional, ValidateSessionTest) {
@@ -142,8 +144,6 @@ TEST(GainCapitalFunctional, GetAccountInfoNoParamTest) {
     nlohmann::json response = nlohmann::json::parse("{\"tradingAccounts\": [{\"tradingAccountId\":\"TradingTestID\", \"clientAccountId\":\"ClientTestID\",\"SampleParam\":\"123\"}]}");
 
     EXPECT_EQ(g.get_account_info(), response);
-    EXPECT_EQ(g.trading_account_id, "\"TradingTestID\"");
-    EXPECT_EQ(g.client_account_id, "\"ClientTestID\"");
 }
 
 TEST(GainCapitalFunctional, GetAccountInfoWithParamTest) {
@@ -152,16 +152,24 @@ TEST(GainCapitalFunctional, GetAccountInfoWithParamTest) {
     bool res = g.authenticate_session();
 
     EXPECT_EQ(g.get_account_info("SampleParam"), "123");
-    EXPECT_EQ(g.trading_account_id, "\"TradingTestID\"");
-    EXPECT_EQ(g.client_account_id, "\"ClientTestID\"");
+}
+
+TEST(GainCapitalFunctional, GetAccountInfoWithBADParamTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9201");
+    bool res = g.authenticate_session();
+
+    nlohmann::json response = nlohmann::json::parse("{\"tradingAccounts\": [{\"tradingAccountId\":\"TradingTestID\", \"clientAccountId\":\"ClientTestID\",\"SampleParam\":\"123\"}]}");
+
+    EXPECT_EQ(g.get_account_info("BadParam"), response);
 }
 
 TEST(GainCapitalFunctional, GetMarginInfoNoParamTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9201");
     bool res = g.authenticate_session();
-    g.trading_account_id = "TEST";
-    g.client_account_id = "TEST";
+    g.CLASS_trading_account_id = "TEST";
+    g.CLASS_client_account_id = "TEST";
 
     nlohmann::json response = nlohmann::json::parse("{\"SampleParam\":\"123\"}");
 
@@ -172,10 +180,22 @@ TEST(GainCapitalFunctional, GetMarginInfoWithParamTest) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9201");
     bool res = g.authenticate_session();
-    g.trading_account_id = "TEST";
-    g.client_account_id = "TEST";
+    g.CLASS_trading_account_id = "TEST";
+    g.CLASS_client_account_id = "TEST";
 
     EXPECT_EQ(g.get_margin_info("SampleParam"), "123");
+}
+
+TEST(GainCapitalFunctional, GetMarginInfoWithBADParamTest) {
+    gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
+    g.set_testing_rest_urls("http://localhost:9201");
+    bool res = g.authenticate_session();
+    g.CLASS_trading_account_id = "TEST";
+    g.CLASS_client_account_id = "TEST";
+
+    nlohmann::json response = nlohmann::json::parse("{\"SampleParam\":\"123\"}");
+
+    EXPECT_EQ(g.get_margin_info("BadParam"), response);
 }
 
 TEST(GainCapitalFunctional, GetMarketIDsTest) {

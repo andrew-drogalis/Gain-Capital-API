@@ -12,8 +12,8 @@ TEST(GainCapitalUnit, DefaultConstructor) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
     
-    EXPECT_EQ(g.trading_account_id, "");
-    EXPECT_EQ(g.client_account_id, "");
+    EXPECT_EQ(g.CLASS_trading_account_id, "");
+    EXPECT_EQ(g.CLASS_client_account_id, "");
     EXPECT_EQ(g.market_id_map, (std::unordered_map<std::string, int>()));
 }
 
@@ -42,8 +42,8 @@ TEST(GainCapitalUnit, AccountIDsCorrectly) {
     gaincapital::GCapiClient g("TEST_USER", "TEST_PASSWORD", "TEST_APIKEY");
     g.set_testing_rest_urls("http://localhost:9200");
     
-    g.trading_account_id = "TEST";
-    g.client_account_id = "TEST";
+    g.CLASS_trading_account_id = "TEST";
+    g.CLASS_client_account_id = "TEST";
 
     EXPECT_EQ(g.validate_account_ids(), true);
 }

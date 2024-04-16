@@ -46,91 +46,41 @@ bool GCapiClient::authenticate_session()
     cpr::Url const url {rest_url_v2 + "/Session"};
     std::string resp_session;
     // ---------------------------
-    int iteration = 0;
-    while (iteration < 2)
+    nlohmann::json resp = make_network_call(headers, url, auth_payload.dump(), "POST", "Authenticate Session");
+    if (! resp.contains("statusCode") || ! resp.contains("session")) { return false; }
+    try
     {
-        try
+        if (static_cast<int>(resp["statusCode"]) != 0)
         {
-            cpr::Response r = cpr::Post(url, headers, cpr::Body {auth_payload.dump()});
-            if (r.status_code != 200) { throw r; }
-            nlohmann::json resp = nlohmann::json::parse(r.text);
-            if (static_cast<int>(resp["statusCode"]) != 0)
-            {
-                BOOST_LOG_TRIVIAL(fatal) << "Response is Valid, but Gain Capital Status Code Error: " << resp["statusCode"];
-                return false;
-            }
-            resp_session = resp["session"];
-            break;
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Authentication Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
-            {
-                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                sleep(1);
-                continue;
-            }
+            BOOST_LOG_TRIVIAL(fatal) << "Response is Valid, but Gain Capital Status Code Error: " << resp["statusCode"];
             return false;
         }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Authentication Error - " << e.what();
-            return false;
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Unknown Authentication Error - Check Internet Connection";
-            return false;
-        }
-        ++iteration;
+    }
+    catch (std::bad_cast const& e)
+    {
+        BOOST_LOG_TRIVIAL(fatal) << "Authenticate Session Error - " << e.what() << " - Cannot Convert Status Code to Integer";
+        return false;
     }
     // ---------------------------
-    session_header = {{"Content-Type", "application/json"}, {"UserName", auth_payload["UserName"]}, {"Session", resp_session}};
+    session_header = {{"Content-Type", "application/json"}, {"UserName", auth_payload["UserName"]}, {"Session", resp["session"].dump()}};
     if (! set_trading_account_id()) { return false; }
     return true;
 }
 
 bool GCapiClient::set_trading_account_id()
 {
-    /* * Sets the member variables trading_account_id & client_account_id. */
+    /* * Sets the member variables CLASS_trading_account_id & CLASS_client_account_id. */
     cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
     // ---------------------------
-    int iteration = 0;
-    while (iteration < 2)
-    {
-        try
-        {
-            cpr::Response r = cpr::Get(url, session_header);
-            if (r.status_code != 200) { throw r; }
-            nlohmann::json resp = nlohmann::json::parse(r.text);
-            trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
-            client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
+    nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Set Trading Account ID");
 
-            return true;
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
-            {
-                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                sleep(1);
-                continue;
-            }
-            return false;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account Error - " << e.what();
-            return false;
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account - Unknown Failure";
-            return false;
-        }
-        ++iteration;
+    CLASS_trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
+    CLASS_client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
+
+    if (CLASS_trading_account_id == "null" || CLASS_client_account_id == "null")
+    {
+        BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account ID - JSON Key Error - Response: " << resp;
+        return false;
     }
     return true;
 }
@@ -140,114 +90,18 @@ bool GCapiClient::validate_session()
     /* * Validates current session and updates if token expired. */
     if (! validate_session_header()) { return false; }
 
-    nlohmann::json resp;
-    nlohmann::json payload = {{"ClientAccountId", client_account_id},
+    nlohmann::json payload = {{"ClientAccountId", CLASS_client_account_id},
                               {"UserName", session_header["Username"]},
                               {"Session", session_header["Session"]},
-                              {"TradingAccountId", trading_account_id}};
+                              {"TradingAccountId", CLASS_trading_account_id}};
     cpr::Url const url {rest_url_v2 + "/Session/validate"};
 
-    int iteration = 0;
-    while (iteration < 2)
-    {
-        try
-        {
-            cpr::Response r = cpr::Post(url, session_header, cpr::Body {payload.dump()});
-            if (r.status_code != 200) { throw r; }
-            resp = nlohmann::json::parse(r.text);
-            if (resp["isAuthenticated"] == false && ! authenticate_session()) { return false; }
-            break;
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
-            {
-                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                sleep(1);
-                continue;
-            }
-            return false;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Validate Session Error - " << e.what();
-            return false;
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Validate Session - Unknown Failure";
-            return false;
-        }
-        ++iteration;
-    }
+    nlohmann::json resp = make_network_call(session_header, url, payload.dump(), "POST", "Validate Session");
+
+    if ((! resp.contains("isAuthenticated") || ! resp["isAuthenticated"]) && ! authenticate_session()) { return false; }
+
     return true;
 }
-
-// =================================================================================================================
-// UTILITIES
-// =================================================================================================================
-
-void GCapiClient::add_console_log(bool const enable)
-{
-    /* Optional: Boost Logging to STD Output */
-    static auto console_sink = boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
-
-    if (! enable) { boost::log::core::get()->remove_sink(console_sink); }
-}
-
-void GCapiClient::initialize_logging_file(std::string const& file_path, std::string const& file_name, std::string severity)
-{
-    /* * Optional: Boost Logging to File */
-    std::string file_name_concat = file_path + "/" + file_name + ".log";
-    static auto file_sink =
-        boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
-                                 boost::log::keywords::auto_flush = true);
-
-    std::transform(severity.begin(), severity.end(), severity.begin(), ::tolower);
-
-    if (severity == "fatal") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal); }
-    else if (severity == "error") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error); }
-    else if (severity == "warning") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning); }
-    else if (severity == "info") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info); }
-    else if (severity == "debug") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug); }
-    else if (severity == "trace") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace); }
-    else
-    {
-        std::cerr
-            << "No match to Boost Logging Severity Level. Provide one of the following: 'fatal', 'error', 'warning', 'info', 'debug', or 'trace'";
-    }
-
-    boost::log::add_common_attributes();
-}
-
-bool GCapiClient::validate_session_header() const
-{
-    if (session_header.empty())
-    {
-        BOOST_LOG_TRIVIAL(fatal) << "Session Not Authenticated, Run 'authenticate_session' Command";
-        return false;
-    }
-    return true;
-}
-
-bool GCapiClient::validate_auth_payload() const
-{
-    if (auth_payload.empty())
-    {
-        BOOST_LOG_TRIVIAL(fatal) << "Failed to pass 'Username', 'Password', and 'APIKey' to constructor";
-        return false;
-    }
-    return true;
-}
-
-bool GCapiClient::validate_account_ids() const noexcept
-{
-    if (trading_account_id == "" || client_account_id == "") { return false; }
-    return true;
-}
-
-void GCapiClient::set_testing_rest_urls(std::string const& url) { rest_url = rest_url_v2 = url; }
 
 // =================================================================================================================
 // API CALLS
@@ -263,43 +117,9 @@ nlohmann::json GCapiClient::get_account_info(std::string const& param)
 
     if (! validate_session()) { return resp; }
 
-    int iteration = 0;
-    while (iteration < 2)
-    {
-        try
-        {
-            cpr::Response r = cpr::Get(url, session_header);
-            if (r.status_code != 200) { throw r; }
-            resp = nlohmann::json::parse(r.text);
-            trading_account_id = resp["tradingAccounts"][0]["tradingAccountId"].dump();
-            client_account_id = resp["tradingAccounts"][0]["clientAccountId"].dump();
+    resp = make_network_call(session_header, url, "", "GET", "Get Account Info");
 
-            if (! param.empty() && resp["tradingAccounts"][0].contains(param)) { return resp["tradingAccounts"][0][param]; }
-            break;
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Account Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
-            {
-                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                sleep(1);
-                continue;
-            }
-            break;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Get Account Info Error - " << e.what();
-            break;
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Get Account Info - Unknown Failure";
-            break;
-        }
-        ++iteration;
-    }
+    if (! param.empty() && resp["tradingAccounts"][0].contains(param)) { return resp["tradingAccounts"][0][param]; }
     // -------------------
     return resp;
 }
@@ -317,42 +137,11 @@ nlohmann::json GCapiClient::get_margin_info(std::string const& param)
     // -------------------
     if (! validate_session()) { return resp; }
 
-    cpr::Url const url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + client_account_id};
-    int iteration = 0;
-    while (iteration < 2)
-    {
-        try
-        {
-            cpr::Response r = cpr::Get(url, session_header);
-            if (r.status_code != 200) { throw r; }
-            resp = nlohmann::json::parse(r.text);
+    cpr::Url const url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + CLASS_client_account_id};
 
-            if (! param.empty() && resp.contains(param)) { return resp[param]; }
-            break;
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Margin Info Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
-            {
-                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                sleep(1);
-                continue;
-            }
-            break;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Get Margin Info Error - " << e.what();
-            break;
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Get Margin Info - Unknown Failure";
-            break;
-        }
-        ++iteration;
-    }
+    resp = make_network_call(session_header, url, "", "GET", "Get Margin Info");
+
+    if (! param.empty() && resp.contains(param)) { return resp[param]; }
     // -------------------
     return resp;
 }
@@ -367,28 +156,16 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std
 
     for (auto const& market_name : market_name_list)
     {
+        cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
+        nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Market IDs - " + market_name);
         try
         {
-            cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
-            cpr::Response r = cpr::Get(url, session_header);
-            if (r.status_code != 200) { throw r; }
-            nlohmann::json resp = nlohmann::json::parse(r.text);
-
-            int const market_id = static_cast<int>(resp["Markets"][0]["MarketId"]);
-            market_id_map[market_name] = market_id;
+            if (resp["Markets"][0].contains("MarketId")) { market_id_map[market_name] = static_cast<int>(resp["Markets"][0]["MarketId"]); }
+            else { throw std::bad_cast(); }
         }
-        catch (cpr::Response const& r)
+        catch (std::bad_cast const& e)
         {
-            BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code
-                                     << "; Message: " << r.text;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Market ID for " << market_name << " - " << e.what();
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(error) << "Unknown Error in Fetching Market Id for " << market_name;
+            BOOST_LOG_TRIVIAL(fatal) << "Get Market IDs Error - " << e.what() << " - Cannot Convert to Integer";
         }
     }
     // -------------------
@@ -408,30 +185,12 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
 
     for (auto const& market_name : market_name_list)
     {
-        try
-        {
-            cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
-            cpr::Response r = cpr::Get(url, session_header);
-            if (r.status_code != 200) { throw r; }
-            nlohmann::json resp = nlohmann::json::parse(r.text);
+        cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
+        nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Market Info - " + market_name);
 
-            if (param.empty()) { response_map[market_name] = resp["Markets"][0]["MarketId"].dump(); }
-            else if (! param.empty() && resp["Markets"][0].contains(param)) { response_map[market_name] = resp["Markets"][0][param].dump(); }
-            else { response_map[market_name] = resp["Markets"][0].dump(); }
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(error) << "Error Fetching Market ID for " << market_name << "; Status Code: " << r.status_code
-                                     << "; Message: " << r.text;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Market ID for " << market_name << " - " << e.what();
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(error) << "Unknown Error in Fetching Market Id for " << market_name;
-        }
+        if (param.empty()) { response_map[market_name] = resp["Markets"][0]["MarketId"].dump(); }
+        else if (! param.empty() && resp["Markets"][0].contains(param)) { response_map[market_name] = resp["Markets"][0][param].dump(); }
+        else { response_map[market_name] = resp["Markets"][0].dump(); }
     }
     // -------------------
     return response_map;
@@ -461,11 +220,11 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
 
     for (auto const& market_name : market_name_list)
     {
-        std::string market_id = "0";
+        std::string market_id = "";
         if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
         else
         {
-            auto response = get_market_ids({market_name});
+            auto DISCARD_response = get_market_ids({market_name});
             market_id = std::to_string(market_id_map[market_name]);
         }
         // ---------------------------
@@ -489,42 +248,9 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
         {
             url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type};
         }
-        int iteration = 0;
-        while (iteration < 2)
-        {
-            try
-            {
-                cpr::Response r = cpr::Get(url, session_header);
-                if (r.status_code != 200) { throw r; }
-                nlohmann::json resp = nlohmann::json::parse(r.text);
+        nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Prices - " + market_name);
 
-                response_map[market_name] = resp["PriceTicks"];
-                break;
-            }
-            catch (cpr::Response const& r)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Error Fetching Price for " << market_name << "; Status Code: " << r.status_code
-                                         << "; Message: " << r.text;
-                if (! iteration && (r.status_code == 500 || r.status_code == 504))
-                {
-                    BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                    sleep(1);
-                    continue;
-                }
-                break;
-            }
-            catch (std::exception const& e)
-            {
-                BOOST_LOG_TRIVIAL(fatal) << "Error Fetching Price for " << market_name << " - " << e.what();
-                break;
-            }
-            catch (...)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Unknown Error in Fetching Price for " << market_name;
-                break;
-            }
-            ++iteration;
-        }
+        response_map[market_name] = (resp.contains("PriceTicks")) ? resp["PriceTicks"] : resp;
     }
     // -------------------
     return response_map;
@@ -584,7 +310,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
         if (market_id_map.count(market_name)) { market_id = std::to_string(market_id_map[market_name]); }
         else
         {
-            auto response = get_market_ids({market_name});
+            auto DISCARD_response = get_market_ids({market_name});
             market_id = std::to_string(market_id_map[market_name]);
         }
         // ---------------------------
@@ -609,42 +335,9 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
             url = cpr::Url {rest_url + "/market/" + market_id + "/barhistory?interval=" + interval + "&span=" + std::to_string(span) +
                             "&PriceBars=" + std::to_string(num_ticks)};
         }
-        int iteration = 0;
-        while (iteration < 2)
-        {
-            try
-            {
-                cpr::Response r = cpr::Get(url, session_header);
-                if (r.status_code != 200) { throw r; }
-                nlohmann::json resp = nlohmann::json::parse(r.text);
+        nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get OHLC - " + market_name);
 
-                response_map[market_name] = resp["PriceBars"];
-                break;
-            }
-            catch (cpr::Response const& r)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Error Fetching OHLC for " << market_name << "; Status Code: " << r.status_code
-                                         << "; Message: " << r.text;
-                if (! iteration && (r.status_code == 500 || r.status_code == 504))
-                {
-                    BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                    sleep(1);
-                    continue;
-                }
-                break;
-            }
-            catch (std::exception const& e)
-            {
-                BOOST_LOG_TRIVIAL(fatal) << "Error Fetching OHLC for " << market_name << " - " << e.what();
-                break;
-            }
-            catch (...)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Unknown Error in Fetching OHLC for " << market_name;
-                break;
-            }
-            ++iteration;
-        }
+        response_map[market_name] = (resp.contains("PriceBars")) ? resp["PriceBars"] : resp;
     }
     // -------------------
     return response_map;
@@ -676,7 +369,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
     // -------------------
     if (! validate_session()) { return market_name_list; }
 
-    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 
@@ -733,14 +426,14 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                 bid_price = static_cast<float>(get_prices({market_name}, 1, 0, 0, "BID")[market_name][0]["Price"]);
                 offer_price = static_cast<float>(get_prices({market_name}, 1, 0, 0, "ASK")[market_name][0]["Price"]);
             }
-            catch (...)
+            catch (std::exception const& e)
             {
                 error_list.push_back(market_name);
-                BOOST_LOG_TRIVIAL(error) << "Failure Fetching Prices for Market - " << market_name;
+                BOOST_LOG_TRIVIAL(error) << "Failure Fetching Prices for Market - " << market_name << "; Error: " << e.what();
                 continue;
             }
             // ---------------------------
-            std::vector<nlohmann::json> if_done = {};
+            std::vector<nlohmann::json> if_done;
             if (type == "LIMIT")
             {
                 if (trade_map[market_name]["StopPrice"].dump() != "null")
@@ -763,51 +456,40 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                     if_done.push_back(limit_order);
                 }
             }
+            nlohmann::json trade_payload = {
+                {"Direction", trade_map[market_name]["Direction"]},
+                // {"AuditId", audit_id},
+                {"MarketId", market_id},
+                {"Quantity", trade_map[market_name]["Quantity"].dump()},
+                {"MarketName", market_name},
+                {"TradingAccountId", tr_account_id},
+                {"OfferPrice", std::to_string(offer_price)},
+                {"BidPrice", std::to_string(bid_price)},
+            };
+
+            if (type == "LIMIT")
+            {
+                nlohmann::json additional_payload = {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()}, {"IfDone", if_done}};
+                trade_payload.update(additional_payload);
+            }
+            else
+            {
+                nlohmann::json additional_payload = {{"PriceTolerance", "0"}};
+                trade_payload.update(additional_payload);
+            }
+
+            nlohmann::json resp = make_network_call(session_header, url, trade_payload.dump(), "POST", "Trade Order - " + market_name);
+            // Set Logging to 'Info' to suppress output.
+            BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
+            // ---------------------------
             try
             {
-                nlohmann::json trade_payload = {
-                    {"Direction", trade_map[market_name]["Direction"]},
-                    // {"AuditId", audit_id},
-                    {"MarketId", market_id},
-                    {"Quantity", trade_map[market_name]["Quantity"].dump()},
-                    {"MarketName", market_name},
-                    {"TradingAccountId", tr_account_id},
-                    {"OfferPrice", std::to_string(offer_price)},
-                    {"BidPrice", std::to_string(bid_price)},
-                };
-
-                if (type == "LIMIT")
-                {
-                    nlohmann::json additional_payload = {{"TriggerPrice", trade_map[market_name]["TriggerPrice"].dump()}, {"IfDone", if_done}};
-                    trade_payload.update(additional_payload);
-                }
-                else
-                {
-                    nlohmann::json additional_payload = {{"PriceTolerance", "0"}};
-                    trade_payload.update(additional_payload);
-                }
-
-                cpr::Response r = cpr::Post(url, session_header, cpr::Body(trade_payload.dump()));
-                if (r.status_code != 200) { throw r; }
-                nlohmann::json resp = nlohmann::json::parse(r.text);
-
-                // Set Logging to 'Info' to suppress output.
-                BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
-                // ---------------------------
-                if (static_cast<int>(resp["OrderId"]) == 0) { error_list.push_back(market_name); }
+                if (! resp.contains("OrderId") || static_cast<int>(resp["OrderId"]) == 0) { error_list.push_back(market_name); }
             }
-            catch (cpr::Response const& r)
+            catch (std::bad_cast const& e)
             {
-                BOOST_LOG_TRIVIAL(error) << "Order Response: Status Code: " << r.status_code << "; Message: " << r.text;
-                if (r.status_code == 500 || r.status_code == 504) { error_list.push_back(market_name); }
-            }
-            catch (std::exception const& e)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Error Placing Trade Order for " << market_name << " - " << e.what();
-            }
-            catch (...)
-            {
-                BOOST_LOG_TRIVIAL(error) << "Error Placing Trade Order for " << market_name;
+                error_list.push_back(market_name);
+                BOOST_LOG_TRIVIAL(fatal) << "Place Trade Error - " << e.what() << " - Cannot Convert Order ID to Integer";
             }
         }
         // -----------------------
@@ -831,41 +513,12 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
     // -------------------
     if (! validate_session()) { return resp; }
 
-    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
     cpr::Url const url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
-    int iteration = 0;
-    while (iteration < 2)
-    {
-        try
-        {
-            cpr::Response r = cpr::Get(url, session_header);
-            if (r.status_code != 200) { throw r; }
-            resp = nlohmann::json::parse(r.text)["OpenPositions"];
-            break;
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Open Positions Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
-            {
-                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                sleep(1);
-                continue;
-            }
-            break;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "List Open Positions Exception - " << e.what();
-            break;
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "List Open Position - Unknown Failure";
-            break;
-        }
-        ++iteration;
-    }
+
+    resp = make_network_call(session_header, url, "", "GET", "List Open Positions");
+
+    if (resp.contains("OpenPositions")) { resp = resp["OpenPositions"]; }
     // -------------------
     return resp;
 }
@@ -880,43 +533,14 @@ nlohmann::json GCapiClient::list_active_orders(std::string tr_account_id)
     // -------------------
     if (! validate_session()) { return resp; }
 
-    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/activeorders"};
     nlohmann::json active_order_payload = {{"TradingAccountId", tr_account_id}, {"MaxResults", "100"}};
-    int iteration = 0;
-    while (iteration < 2)
-    {
-        try
-        {
-            cpr::Response r = cpr::Post(url, session_header, cpr::Body {active_order_payload.dump()});
-            if (r.status_code != 200) { throw r; }
-            resp = nlohmann::json::parse(r.text)["ActiveOrders"];
-            break;
-        }
-        catch (cpr::Response const& r)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Active Orders Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
-            {
-                BOOST_LOG_TRIVIAL(info) << "Retrying Request";
-                sleep(1);
-                continue;
-            }
-            break;
-        }
-        catch (std::exception const& e)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "List Active Order Exception - " << e.what();
-            break;
-        }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "List Active Order - Unknown Failure" << resp;
-            break;
-        }
-        ++iteration;
-    }
+
+    resp = make_network_call(session_header, url, active_order_payload.dump(), "POST", "List Active Orders");
+
+    if (resp.contains("ActiveOrders")) { resp = resp["ActiveOrders"]; }
     // -------------------
     return resp;
 }
@@ -932,24 +556,43 @@ nlohmann::json GCapiClient::cancel_order(std::string const& order_id, std::strin
     // -------------------
     if (! validate_session()) { return resp; }
 
-    if (tr_account_id.empty()) { tr_account_id = trading_account_id; }
+    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/cancel"};
     nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id}, {"OrderId", order_id}};
-    int iteration = 0;
-    while (iteration < 2)
+    // -------------------
+    return make_network_call(session_header, url, cancel_order_payload.dump(), "POST", "Cancel Order");
+}
+
+// =================================================================================================================
+// UTILITIES
+// =================================================================================================================
+
+nlohmann::json GCapiClient::make_network_call(cpr::Header const& header, cpr::Url const& url, std::string const& payload, std::string const& type,
+                                              std::string const& func_name)
+{
+    nlohmann::json resp;
+    int const COUNT_MAX = 2;
+    for (int iteration {}; iteration < COUNT_MAX; ++iteration)
     {
         try
         {
-            cpr::Response r = cpr::Post(url, session_header, cpr::Body {cancel_order_payload.dump()});
+            cpr::Response r;
+            if (type == "POST") { r = cpr::Post(url, header, cpr::Body {payload}); }
+            else if (type == "GET") { r = cpr::Get(url, header); }
             if (r.status_code != 200) { throw r; }
             resp = nlohmann::json::parse(r.text);
             break;
         }
         catch (cpr::Response const& r)
         {
-            BOOST_LOG_TRIVIAL(fatal) << "Cancel Order Error - Status Code: " << r.status_code << "; Message: " << r.text;
-            if (! iteration && (r.status_code == 500 || r.status_code == 504))
+            if (! r.status_code)
+            {
+                BOOST_LOG_TRIVIAL(fatal) << func_name << " Error - Status Code: " << r.status_code << "; Message: No Internet Connection";
+            }
+            else { BOOST_LOG_TRIVIAL(fatal) << func_name << " Error - Status Code: " << r.status_code << "; Message: " << r.text; }
+
+            if (iteration < COUNT_MAX - 1 && (r.status_code == 500 || r.status_code == 504))
             {
                 BOOST_LOG_TRIVIAL(info) << "Retrying Request";
                 sleep(1);
@@ -957,20 +600,74 @@ nlohmann::json GCapiClient::cancel_order(std::string const& order_id, std::strin
             }
             break;
         }
-        catch (std::exception const& e)
+        catch (nlohmann::json::exception const& e)
         {
-            BOOST_LOG_TRIVIAL(fatal) << "Cancel Order Exception - " << e.what();
+            BOOST_LOG_TRIVIAL(fatal) << func_name << " JSON Error - " << e.what();
             break;
         }
-        catch (...)
-        {
-            BOOST_LOG_TRIVIAL(fatal) << "Cancel Order - Unknown Failure";
-            break;
-        }
-        ++iteration;
     }
-    // -------------------
     return resp;
 }
+
+void GCapiClient::add_console_log(bool const enable)
+{
+    /* Optional: Boost Logging to STD Output */
+    static auto console_sink = boost::log::add_console_log(std::cout, boost::log::keywords::format = ">> %Message%");
+
+    if (! enable) { boost::log::core::get()->remove_sink(console_sink); }
+}
+
+void GCapiClient::initialize_logging_file(std::string const& file_path, std::string const& file_name, std::string severity)
+{
+    /* * Optional: Boost Logging to File */
+    std::string file_name_concat = file_path + "/" + file_name + ".log";
+    static auto file_sink =
+        boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
+                                 boost::log::keywords::auto_flush = true);
+
+    std::transform(severity.begin(), severity.end(), severity.begin(), ::tolower);
+
+    if (severity == "fatal") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal); }
+    else if (severity == "error") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error); }
+    else if (severity == "warning") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning); }
+    else if (severity == "info") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info); }
+    else if (severity == "debug") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug); }
+    else if (severity == "trace") { boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace); }
+    else
+    {
+        std::cerr
+            << "No match to Boost Logging Severity Level. Provide one of the following: 'fatal', 'error', 'warning', 'info', 'debug', or 'trace'";
+    }
+
+    boost::log::add_common_attributes();
+}
+
+bool GCapiClient::validate_session_header() const
+{
+    if (session_header.empty())
+    {
+        BOOST_LOG_TRIVIAL(fatal) << "Session Not Authenticated, Run 'authenticate_session' Command";
+        return false;
+    }
+    return true;
+}
+
+bool GCapiClient::validate_auth_payload() const
+{
+    if (auth_payload.empty())
+    {
+        BOOST_LOG_TRIVIAL(fatal) << "Failed to pass 'Username', 'Password', and 'APIKey' to constructor";
+        return false;
+    }
+    return true;
+}
+
+bool GCapiClient::validate_account_ids() const noexcept
+{
+    if (CLASS_trading_account_id == "" || CLASS_client_account_id == "") { return false; }
+    return true;
+}
+
+void GCapiClient::set_testing_rest_urls(std::string const& url) { rest_url = rest_url_v2 = url; }
 
 }// namespace gaincapital

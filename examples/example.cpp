@@ -69,7 +69,7 @@ int main()
     nlohmann::json open_position_response = gc_api.list_open_positions();
 
     // Cancel Active Orders
-    for (nlohmann::json active_order : active_order_response)
+    for (nlohmann::json& active_order : active_order_response)
     {
         // Cancel Market Orders
         if (active_order.contains("TradeOrder"))

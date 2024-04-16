@@ -137,7 +137,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
 ```c
     // Cancel Active Orders
-    for (nlohmann::json active_order : active_order_response) 
+    for (nlohmann::json& active_order : active_order_response) 
     {    
         // Cancel Market Orders
         if (active_order.contains("TradeOrder")) 
