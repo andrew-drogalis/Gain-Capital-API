@@ -169,7 +169,7 @@ TEST(GainCapital_Failed_Server, Get_Market_IDs_Failed_Server_Test) {
     gc.set_testing_rest_urls(URL);
     bool _ = gc.authenticate_session();
 
-    EXPECT_EQ(gc.get_market_ids({"USD/CAD"}), (std::unordered_map<std::string, int>()));
+    EXPECT_EQ(gc.get_market_ids({"USD/CAD"}), (std::unordered_map<std::string, std::string>()));
 }
 
 

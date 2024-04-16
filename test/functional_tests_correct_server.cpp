@@ -222,7 +222,7 @@ TEST(GainCapital_Functional_Server, Get_Market_IDs_Test) {
     gc.set_testing_rest_urls(URL);
     bool _ = gc.authenticate_session();
 
-    std::unordered_map<std::string, int> response = {{"USD/CAD", 123}};
+    std::unordered_map<std::string, std::string> response = {{"USD/CAD", "123"}};
 
     EXPECT_EQ(gc.get_market_ids({"USD/CAD"}), response);
 }

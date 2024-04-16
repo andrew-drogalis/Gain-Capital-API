@@ -19,7 +19,7 @@ TEST(GainCapitalUnit, Default_Constructor) {
     
     EXPECT_EQ(gc.CLASS_trading_account_id, "");
     EXPECT_EQ(gc.CLASS_client_account_id, "");
-    EXPECT_EQ(gc.market_id_map, (std::unordered_map<std::string, int>()));
+    EXPECT_EQ(gc.market_id_map, (std::unordered_map<std::string, std::string>()));
 }
 
 
@@ -102,7 +102,7 @@ TEST(GainCapitalUnit, Market_IDs_APIC_all_FailEarly) {
     GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    EXPECT_EQ(gc.get_market_ids({"USD/CAD"}), (std::unordered_map<std::string, int>()));
+    EXPECT_EQ(gc.get_market_ids({"USD/CAD"}), (std::unordered_map<std::string, std::string>()));
 }
 
 

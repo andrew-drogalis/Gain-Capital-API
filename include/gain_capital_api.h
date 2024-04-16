@@ -21,7 +21,7 @@ class GCapiClient
   public:
     std::string CLASS_trading_account_id;
     std::string CLASS_client_account_id;
-    std::unordered_map<std::string, int> market_id_map;
+    std::unordered_map<std::string, std::string> market_id_map;
 
     GCapiClient() = default;
 
@@ -54,7 +54,7 @@ class GCapiClient
 
     [[nodiscard]] nlohmann::json get_margin_info(std::string const& param = "");
 
-    [[nodiscard]] std::unordered_map<std::string, int> get_market_ids(std::vector<std::string> const& positions);
+    [[nodiscard]] std::unordered_map<std::string, std::string> get_market_ids(std::vector<std::string> const& positions);
 
     [[nodiscard]] std::unordered_map<std::string, std::string> get_market_info(std::vector<std::string> const& market_name_list,
                                                                                std::string const& param = "");

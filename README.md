@@ -91,7 +91,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 ```c
     // Get Market IDs
     // Sets Class Map with Market IDs
-    std::map<std::string, int> market_ids_response = gc_api.get_market_ids(currency_pairs);
+    std::map<std::string, std::string> market_ids_response = gc_api.get_market_ids(currency_pairs);
 ```
 
 ### Fetching OHLC Data
