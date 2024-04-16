@@ -44,7 +44,6 @@ bool GCapiClient::authenticate_session()
 
     cpr::Header const headers {{"Content-Type", "application/json"}};
     cpr::Url const url {rest_url_v2 + "/Session"};
-    std::string resp_session;
     // ---------------------------
     nlohmann::json resp = make_network_call(headers, url, auth_payload.dump(), "POST", "Authenticate Session");
     if (! resp.contains("statusCode") || ! resp.contains("session")) { return false; }
@@ -64,6 +63,7 @@ bool GCapiClient::authenticate_session()
     // ---------------------------
     session_header = {{"Content-Type", "application/json"}, {"UserName", auth_payload["UserName"]}, {"Session", resp["session"].dump()}};
     if (! set_trading_account_id()) { return false; }
+    // [No Errors] Response Good
     return true;
 }
 
@@ -82,6 +82,7 @@ bool GCapiClient::set_trading_account_id()
         BOOST_LOG_TRIVIAL(fatal) << "Set Trading Account ID - JSON Key Error - Response: " << resp;
         return false;
     }
+    // [No Errors] Response Good
     return true;
 }
 
@@ -98,8 +99,8 @@ bool GCapiClient::validate_session()
 
     nlohmann::json resp = make_network_call(session_header, url, payload.dump(), "POST", "Validate Session");
 
-    if ((! resp.contains("isAuthenticated") || ! resp["isAuthenticated"]) && ! authenticate_session()) { return false; }
-
+    if (resp["isAuthenticated"].dump() != "true" && ! authenticate_session()) { return false; }
+    // [No Errors] Response Good
     return true;
 }
 
@@ -113,9 +114,10 @@ nlohmann::json GCapiClient::get_account_info(std::string const& param)
        :return: trading account information
     */
     nlohmann::json resp;
-    cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
-
+    // -------------------
     if (! validate_session()) { return resp; }
+
+    cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
 
     resp = make_network_call(session_header, url, "", "GET", "Get Account Info");
 
@@ -157,6 +159,7 @@ std::unordered_map<std::string, int> GCapiClient::get_market_ids(std::vector<std
     for (auto const& market_name : market_name_list)
     {
         cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
+
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Market IDs - " + market_name);
         try
         {
@@ -186,7 +189,10 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
     for (auto const& market_name : market_name_list)
     {
         cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
+
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Market Info - " + market_name);
+
+        if (resp.empty()) { continue; }
 
         if (param.empty()) { response_map[market_name] = resp["Markets"][0]["MarketId"].dump(); }
         else if (! param.empty() && resp["Markets"][0].contains(param)) { response_map[market_name] = resp["Markets"][0][param].dump(); }
@@ -250,7 +256,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
         }
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Prices - " + market_name);
 
-        response_map[market_name] = (resp.contains("PriceTicks")) ? resp["PriceTicks"] : resp;
+        if (! resp.empty()) { response_map[market_name] = (resp.contains("PriceTicks")) ? resp["PriceTicks"] : resp; }
     }
     // -------------------
     return response_map;
@@ -337,7 +343,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
         }
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get OHLC - " + market_name);
 
-        response_map[market_name] = (resp.contains("PriceBars")) ? resp["PriceBars"] : resp;
+        if (! resp.empty()) { response_map[market_name] = (resp.contains("PriceBars")) ? resp["PriceBars"] : resp; }
     }
     // -------------------
     return response_map;
@@ -365,6 +371,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
             }}
     */
     std::vector<std::string> error_list, input_error_list, market_name_list;
+
     for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) { market_name_list.push_back(it.key()); }
     // -------------------
     if (! validate_session()) { return market_name_list; }
@@ -415,7 +422,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
             }
             if (type == "LIMIT" && trade_map[market_name]["TriggerPrice"].dump() == "null")
             {
-                BOOST_LOG_TRIVIAL(error) << market_name << "- Trigger Price Required for Limit Orders";
+                BOOST_LOG_TRIVIAL(error) << market_name << " - Trigger Price Required for Limit Orders";
                 input_error_list.push_back(market_name);
                 continue;
             }
@@ -514,6 +521,7 @@ nlohmann::json GCapiClient::list_open_positions(std::string tr_account_id)
     if (! validate_session()) { return resp; }
 
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
+
     cpr::Url const url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
 
     resp = make_network_call(session_header, url, "", "GET", "List Open Positions");
