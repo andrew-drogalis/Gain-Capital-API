@@ -38,8 +38,7 @@ GCapiClient::GCapiClient(std::string const& username, std::string const& passwor
 
 bool GCapiClient::authenticate_session()
 {
-    /* * This is the first authentication of the user.
-     * This method MUST run before any other API request. */
+    /* * The first authentication of the user. This method MUST run before any other API request. */
     if (! validate_auth_payload()) { return false; }
 
     cpr::Header const headers {{"Content-Type", "application/json"}};
@@ -155,7 +154,7 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_ids(std::ve
 
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Market IDs - " + market_name);
 
-        std::string market_id = resp["Markets"][0]["MarketId"].dump();
+        std::string const market_id = resp["Markets"][0]["MarketId"].dump();
 
         if (market_id != "null") { market_id_map[market_name] = market_id; }
     }
@@ -182,8 +181,7 @@ std::unordered_map<std::string, std::string> GCapiClient::get_market_info(std::v
 
         if (resp.empty()) { continue; }
 
-        if (param.empty()) { response_map[market_name] = resp["Markets"][0]["MarketId"].dump(); }
-        else if (! param.empty() && resp["Markets"][0].contains(param)) { response_map[market_name] = resp["Markets"][0][param].dump(); }
+        if (! param.empty() && resp["Markets"][0].contains(param)) { response_map[market_name] = resp["Markets"][0][param].dump(); }
         else { response_map[market_name] = resp["Markets"][0].dump(); }
     }
     // -------------------
@@ -247,6 +245,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_prices(std::vec
         {
             url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type};
         }
+        // ---------------------------
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get Prices - " + market_name);
 
         if (! resp.empty() && resp.contains("PriceTicks")) { response_map[market_name] = resp["PriceTicks"]; }
@@ -283,6 +282,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
                                     "'MINUTE', 'DAY', 'WEEK', 'MONTH'";
         return response_map;
     }
+    // -------------------
     if (interval == "HOUR")
     {
         if (std::find(SPAN_H.begin(), SPAN_H.end(), span) == SPAN_H.end())
@@ -339,6 +339,7 @@ std::unordered_map<std::string, nlohmann::json> GCapiClient::get_ohlc(std::vecto
             url = cpr::Url {rest_url + "/market/" + market_id + "/barhistory?interval=" + interval + "&span=" + std::to_string(span) +
                             "&PriceBars=" + std::to_string(num_ticks)};
         }
+        // ---------------------------
         nlohmann::json resp = make_network_call(session_header, url, "", "GET", "Get OHLC - " + market_name);
 
         if (! resp.empty() && resp.contains("PriceBars")) { response_map[market_name] = resp["PriceBars"]; }
@@ -370,7 +371,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
     */
     std::vector<std::string> error_list, input_error_list, market_name_list;
 
-    for (nlohmann::json::iterator it = trade_map.begin(); it != trade_map.end(); ++it) { market_name_list.push_back(it.key()); }
+    for (auto it = trade_map.begin(); it != trade_map.end(); ++it) { market_name_list.push_back(it.key()); }
     // -------------------
     if (! validate_session()) { return market_name_list; }
 
@@ -383,7 +384,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
         BOOST_LOG_TRIVIAL(error) << "Trade Order Type Must Be 'MARKET' or 'LIMIT'";
         return market_name_list;
     }
-
+    // -------------------
     std::size_t current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
                                std::chrono::system_clock::period::den;
     int const OFFSET_SECONDS = 8;
@@ -393,7 +394,6 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
 
     while (! market_name_list.empty() && current_time <= stop_time)
     {
-        // -----------------------
         error_list = {};
         for (auto const& market_name : market_name_list)
         {
@@ -430,13 +430,13 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                 input_error_list.push_back(market_name);
                 continue;
             }
-
+            // -------------------
             std::string bid_price, offer_price;
 
             auto bid_response = get_prices({market_name}, 1, 0, 0, "BID");
             auto offer_response = get_prices({market_name}, 1, 0, 0, "ASK");
-            if (bid_response.contains(market_name) && offer_response.contains(market_name) && bid_response[market_name][0]["Price"].dump() != "null" &&
-                offer_response[market_name][0]["Price"].dump() != "null")
+            if (bid_response.contains(market_name) && offer_response.contains(market_name) &&
+                bid_response[market_name][0]["Price"].dump() != "null" && offer_response[market_name][0]["Price"].dump() != "null")
             {
                 bid_price = bid_response[market_name][0]["Price"].dump();
                 offer_price = offer_response[market_name][0]["Price"].dump();
@@ -471,6 +471,7 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                     if_done.push_back(limit_order);
                 }
             }
+            // -------------------
             nlohmann::json trade_payload = {
                 {"Direction", trade_map[market_name]["Direction"]},
                 // {"AuditId", audit_id},
@@ -492,11 +493,11 @@ std::vector<std::string> GCapiClient::trade_order(nlohmann::json& trade_map, std
                 nlohmann::json additional_payload = {{"PriceTolerance", "0"}};
                 trade_payload.update(additional_payload);
             }
-
+            // -------------------
             nlohmann::json resp = make_network_call(session_header, url, trade_payload.dump(), "POST", "Trade Order - " + market_name);
             // Set Logging to 'Info' to suppress output.
             BOOST_LOG_TRIVIAL(debug) << "Order Response: " << market_name << " " << resp;
-            // ---------------------------
+
             if (! resp.contains("OrderId") || ! resp["OrderId"].is_number_integer() || resp["OrderId"] == 0) { error_list.push_back(market_name); }
         }
         // -----------------------
@@ -632,6 +633,8 @@ void GCapiClient::initialize_logging_file(std::string const& file_path, std::str
     static auto file_sink =
         boost::log::add_file_log(boost::log::keywords::file_name = file_name_concat, boost::log::keywords::format = "[%TimeStamp%]: %Message%",
                                  boost::log::keywords::auto_flush = true);
+    
+    boost::log::add_common_attributes();
 
     std::transform(severity.begin(), severity.end(), severity.begin(), ::tolower);
 
@@ -646,8 +649,6 @@ void GCapiClient::initialize_logging_file(std::string const& file_path, std::str
         std::cerr
             << "No match to Boost Logging Severity Level. Provide one of the following: 'fatal', 'error', 'warning', 'info', 'debug', or 'trace'";
     }
-
-    boost::log::add_common_attributes();
 }
 
 bool GCapiClient::validate_session_header() const
