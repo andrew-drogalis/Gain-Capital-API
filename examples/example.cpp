@@ -75,14 +75,14 @@ int main()
         if (active_order.contains("TradeOrder"))
         {
             std::string const order_id = active_order["TradeOrder"]["OrderId"].dump();
-            gc_api.cancel_order(order_id);
+            nlohmann::json cancel_order_response = gc_api.cancel_order(order_id);
         }
 
         // Cancel Limit Orders
         if (active_order.contains("StopLimitOrder"))
         {
             std::string const order_id = active_order["StopLimitOrder"]["OrderId"].dump();
-            gc_api.cancel_order(order_id);
+            nlohmann::json cancel_order_response = gc_api.cancel_order(order_id);
         }
     }
 }

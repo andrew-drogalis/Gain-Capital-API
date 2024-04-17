@@ -73,7 +73,7 @@ class GCapiClient
 
     [[nodiscard]] nlohmann::json list_active_orders(std::string tr_account_id = "");
 
-    nlohmann::json cancel_order(std::string const& order_id, std::string tr_account_id = "");
+    [[nodiscard]] nlohmann::json cancel_order(std::string const& order_id, std::string tr_account_id = "");
 
     // =================================================================================================================
     // UTILITIES
