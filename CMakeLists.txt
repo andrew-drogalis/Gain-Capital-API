@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 project(
-  gain_capital_client
+  gain_capital_api
   VERSION 2.0.1
   DESCRIPTION "Unofficial C++ API for Gain Capital's Forex.com.")
 

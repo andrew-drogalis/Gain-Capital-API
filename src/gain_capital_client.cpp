@@ -13,6 +13,7 @@
 #include <source_location> // for source_location...
 #include <string>          // for basic_string
 #include <unistd.h>        // for sleep
+#include <unordered_map>   // for unordered_map
 #include <vector>          // for vector
 
 #include "cpr/api.h"     // for Get, Post

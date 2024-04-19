@@ -8,6 +8,7 @@
 #include <expected>       // for expected
 #include <source_location>// for source_location...
 #include <string>         // for basic_string
+#include <unordered_map>  // for unordered_map
 
 #include "cpr/cprtypes.h"// for Header
 #include "json/json.hpp" // for json_ref
