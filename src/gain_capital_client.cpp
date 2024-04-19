@@ -394,22 +394,20 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     {
         if (trade_map[market_name]["StopPrice"].dump() != "null")
         {
-            std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
-            nlohmann::json stop_order = {{"Stop",
-                                          {{"TriggerPrice", trade_map[market_name]["StopPrice"].dump()},
-                                           {"Direction", opp_direction},
-                                           {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
-            if_done.push_back(stop_order);
+            std::string const opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
+            if_done.emplace_back(nlohmann::json {{"Stop",
+                                                  {{"TriggerPrice", trade_map[market_name]["StopPrice"].dump()},
+                                                   {"Direction", opp_direction},
+                                                   {"Quantity", trade_map[market_name]["Quantity"].dump()}}}});
         }
 
         if (trade_map[market_name]["LimitPrice"].dump() != "null")
         {
-            std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
-            nlohmann::json limit_order = {{"Limit",
-                                           {{"TriggerPrice", trade_map[market_name]["LimitPrice"].dump()},
-                                            {"Direction", opp_direction},
-                                            {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
-            if_done.push_back(limit_order);
+            std::string const opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
+            if_done.emplace_back(nlohmann::json {{"Limit",
+                                                  {{"TriggerPrice", trade_map[market_name]["LimitPrice"].dump()},
+                                                   {"Direction", opp_direction},
+                                                   {"Quantity", trade_map[market_name]["Quantity"].dump()}}}});
         }
     }
     // -------------------
