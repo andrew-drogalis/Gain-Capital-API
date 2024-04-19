@@ -417,8 +417,6 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     std::size_t const stop_time = current_time + RETRY_SECONDS;
     while (current_time <= stop_time)
     {
-        std::string bid_price, offer_price;
-
         auto bid_response = get_prices(market_name, 1, 0, 0, "BID");
         auto offer_response = get_prices(market_name, 1, 0, 0, "ASK");
         if (! bid_response || ! offer_response)
@@ -426,9 +424,10 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
             return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
                                                                "Failure Fetching Prices"};
         }
-
         nlohmann::json bid_json = bid_response.value();
         nlohmann::json offer_json = offer_response.value();
+
+        std::string bid_price, offer_price;
 
         if (bid_json["PriceTicks"][0]["Price"].dump() != "null" && offer_json["PriceTicks"][0]["Price"].dump() != "null")
         {
