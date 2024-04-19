@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 project(
   gain_capital_api
-  VERSION 1.1.0
+  VERSION 2.0.0
   DESCRIPTION "Unofficial C++ API for Gain Capital's Forex.com.")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Debug")
 
 include(GNUInstallDirs)
 
-add_library(${PROJECT_NAME} SHARED src/gain_capital_api.cpp)
+add_library(${PROJECT_NAME} SHARED src/gain_capital_api.cpp src/gain_capital_exception.cpp)
 
 set_target_properties(
   ${PROJECT_NAME}
@@ -49,8 +49,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     myproject_enable_clang_tidy(${PROJECT_NAME} FALSE)
   endif()
-  # myproject_enable_include_what_you_use()
-  # myproject_enable_cppcheck(FALSE "X")
+  #myproject_enable_include_what_you_use()
+  #myproject_enable_cppcheck(FALSE "X")
   gcc_analyzer_enable()
   myproject_enable_coverage(${PROJECT_NAME})
   myproject_enable_sanitizers(
@@ -74,15 +74,6 @@ FetchContent_MakeAvailable(cpr)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE cpr::cpr)
 
-find_package(
-  Boost
-  COMPONENTS program_options log log_setup
-  REQUIRED)
-
-include_directories(${Boost_INCLUDE_DIRS})
-
-target_link_libraries(${PROJECT_NAME} LINK_PUBLIC ${Boost_LIBRARIES})
-
 # ------------------------------
 # Install library
 install(
@@ -98,10 +89,8 @@ add_subdirectory(test)
 # ===================================================================
 # Build Example Executable
 # ===================================================================
-add_executable(Example examples/example.cpp src/gain_capital_api.cpp)
+add_executable(Example examples/example.cpp src/gain_capital_api.cpp src/gain_capital_exception.cpp)
 
 target_include_directories(Example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(Example PRIVATE cpr::cpr)
-
-target_link_libraries(Example LINK_PUBLIC ${Boost_LIBRARIES})

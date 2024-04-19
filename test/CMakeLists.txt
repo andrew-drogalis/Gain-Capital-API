@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 include(GNUInstallDirs)
 
@@ -51,7 +51,7 @@ cmake_path(
   PARENT_DIR)
 
 # Add a testing executable
-add_executable(unit_tests unit_tests.cpp ${PARENT_DIR}/src/gain_capital_api.cpp)
+add_executable(unit_tests unit_tests.cpp ${PARENT_DIR}/src/gain_capital_api.cpp ${PARENT_DIR}/src/gain_capital_exception.cpp)
 
 target_include_directories(unit_tests PRIVATE ${PARENT_DIR}/include)
 
@@ -60,13 +60,12 @@ target_link_libraries(unit_tests PRIVATE cpr::cpr)
 target_link_libraries(
   unit_tests
   LINK_PUBLIC
-  ${Boost_LIBRARIES}
   GTest::GTest
   GTest::Main)
 
 # Add a testing executable
 add_executable(
-  functional_tests_production_scenario functional_tests_correct_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp)
+  functional_tests_production_scenario functional_tests_correct_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp ${PARENT_DIR}/src/gain_capital_exception.cpp)
 
 target_include_directories(functional_tests_production_scenario PRIVATE ${PARENT_DIR}/include)
 
@@ -75,7 +74,6 @@ target_link_libraries(functional_tests_production_scenario PRIVATE cpr::cpr ${PA
 target_link_libraries(
   functional_tests_production_scenario
   LINK_PUBLIC
-  ${Boost_LIBRARIES}
   GTest::GTest
   GTest::Main
   ${HTTPMOCKSERVER_LIBRARIES}
@@ -83,7 +81,7 @@ target_link_libraries(
 
 # Add a testing executable
 add_executable(
-  functional_tests_failure_scenario functional_tests_failed_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp)
+  functional_tests_failure_scenario functional_tests_failed_server.cpp ${PARENT_DIR}/src/gain_capital_api.cpp ${PARENT_DIR}/src/gain_capital_exception.cpp)
 
 target_include_directories(functional_tests_failure_scenario PRIVATE ${PARENT_DIR}/include)
 
@@ -92,7 +90,6 @@ target_link_libraries(functional_tests_failure_scenario PRIVATE cpr::cpr ${PAREN
 target_link_libraries(
   functional_tests_failure_scenario
   LINK_PUBLIC
-  ${Boost_LIBRARIES}
   GTest::GTest
   GTest::Main
   ${HTTPMOCKSERVER_LIBRARIES}

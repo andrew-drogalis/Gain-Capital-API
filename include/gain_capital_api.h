@@ -4,13 +4,15 @@
 #ifndef GAIN_CAPITAL_API_H
 #define GAIN_CAPITAL_API_H
 
-#include <cstddef>      // for size_t
-#include <string>       // for basic_string
-#include <unordered_map>// for unordered_map
-#include <vector>       // for vector
+#include <cstddef>        // for size_t
+#include <expected>       // for expected
+#include <source_location>// for source_location...
+#include <string>         // for basic_string
 
 #include "cpr/cprtypes.h"// for Header
 #include "json/json.hpp" // for json_ref
+
+#include "gain_capital_exception.h"// for GCException
 
 namespace gaincapital
 {
@@ -42,50 +44,45 @@ class GCapiClient
     // AUTHENTICATION
     // =================================================================================================================
 
-    [[nodiscard]] bool authenticate_session();
+    [[nodiscard]] std::expected<bool, GCException> authenticate_session();
 
-    [[nodiscard]] bool validate_session();
+    [[nodiscard]] std::expected<bool, GCException> validate_session();
 
     // =================================================================================================================
     // API CALLS
     // =================================================================================================================
 
-    [[nodiscard]] nlohmann::json get_account_info(std::string const& param = "");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> get_account_info();
 
-    [[nodiscard]] nlohmann::json get_margin_info(std::string const& param = "");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> get_margin_info();
 
-    [[nodiscard]] std::unordered_map<std::string, std::string> get_market_ids(std::vector<std::string> const& positions);
+    [[nodiscard]] std::expected<nlohmann::json, GCException> get_market_id(std::string const& market_name);
 
-    [[nodiscard]] std::unordered_map<std::string, std::string> get_market_info(std::vector<std::string> const& market_name_list,
-                                                                               std::string const& param = "");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> get_market_info(std::string const& market_name);
 
-    [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_prices(std::vector<std::string> const& market_name_list,
-                                                                             std::size_t const num_ticks = 1, std::size_t const from_ts = 0,
-                                                                             std::size_t const to_ts = 0, std::string price_type = "MID");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> get_prices(std::string const& market_name, std::size_t const num_ticks = 1,
+                                                                        std::size_t const from_ts = 0, std::size_t const to_ts = 0,
+                                                                        std::string price_type = "MID");
 
-    [[nodiscard]] std::unordered_map<std::string, nlohmann::json> get_ohlc(std::vector<std::string> const& market_name_list, std::string interval,
-                                                                           std::size_t const num_ticks = 1, std::size_t span = 1,
-                                                                           std::size_t const from_ts = 0, std::size_t const to_ts = 0);
+    [[nodiscard]] std::expected<nlohmann::json, GCException> get_ohlc(std::string const& market_name, std::string interval,
+                                                                      std::size_t const num_ticks = 1, std::size_t span = 1,
+                                                                      std::size_t const from_ts = 0, std::size_t const to_ts = 0);
 
-    [[nodiscard]] std::vector<std::string> trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id = "");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id = "");
 
-    [[nodiscard]] nlohmann::json list_open_positions(std::string tr_account_id = "");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> list_open_positions(std::string tr_account_id = "");
 
-    [[nodiscard]] nlohmann::json list_active_orders(std::string tr_account_id = "");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> list_active_orders(std::string tr_account_id = "");
 
-    [[nodiscard]] nlohmann::json cancel_order(std::string const& order_id, std::string tr_account_id = "");
+    [[nodiscard]] std::expected<nlohmann::json, GCException> cancel_order(std::string const& order_id, std::string tr_account_id = "");
 
     // =================================================================================================================
     // UTILITIES
     // =================================================================================================================
 
-    static void add_console_log(bool const enable);
+    [[nodiscard]] std::expected<bool, GCException> validate_session_header() const;
 
-    static void initialize_logging_file(std::string const& file_path, std::string const& file_name, std::string severity = "debug");
-
-    [[nodiscard]] bool validate_session_header() const;
-
-    [[nodiscard]] bool validate_auth_payload() const;
+    [[nodiscard]] std::expected<bool, GCException> validate_auth_payload() const;
 
     [[nodiscard]] bool validate_account_ids() const noexcept;
 
@@ -95,21 +92,21 @@ class GCapiClient
     std::string rest_url_v2 = "https://ciapi.cityindex.com/v2";
     std::string rest_url = "https://ciapi.cityindex.com/TradingAPI";
     cpr::Header session_header;
-    nlohmann::json auth_payload;
-    nlohmann::json session_payload;
+    nlohmann::json auth_payload, session_payload;
 
     // =================================================================================================================
     // AUTHENTICATION
     // =================================================================================================================
 
-    [[nodiscard]] bool set_trading_account_id();
+    [[nodiscard]] std::expected<bool, GCException> set_trading_account_id();
 
     // =================================================================================================================
     // UTILITIES
     // =================================================================================================================
 
-    [[nodiscard]] nlohmann::json make_network_call(cpr::Header const& header, cpr::Url const& url, std::string const& payload,
-                                                   std::string const& type, std::string const& func_name);
+    [[nodiscard]] std::expected<nlohmann::json, GCException> make_network_call(
+        cpr::Header const& header, cpr::Url const& url, std::string const& payload, std::string const& type,
+        std::source_location const& location = std::source_location::current());
 };
 
 }// namespace gaincapital

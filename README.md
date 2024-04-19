@@ -6,11 +6,11 @@
 * [Instructions](#Instructions)
     - [Downloading Dependencies](#Downloading-Dependencies)
     - [Initializing API](#Initializing-API)
-    - [Initializing Logging](#Initializing-Logging)
     - [Authenticating Session](#Authenticating-Session)
     - [Account & Margin Information](#Account-&-Margin-Information)
     - [Market IDs & Information](#Market-IDs-&-Information)
     - [Fetching OHLC Data](#Fetching-OHLC-Data)
+    - [Fetching Price Data](#Fetching-Price-Data)
     - [Placing Trades](#Placing-Trades)
     - [Monitoring Trades](#Monitoring-Trades)
     - [Canceling Active Orders](#Canceling-Active-Orders)
@@ -26,15 +26,15 @@ This library is dependent upon the API from Gain Capital's Forex.com. To make an
 
 ### Downloading Dependencies
 
-Please see a link to required dependencies [below](#Dependencies). If you are using Linux, Boost can be installed with the following commands below.
+Please see a link to required dependencies [below](#Dependencies). If you are using Linux, the dependencies can be installed with the following commands below. Additionally, this repository comes with a .devcontainer directory. The .devcontainer has all the required dependencies and can be run inside a Docker container.
 
 ```
     Fedora:
-        dnf install boost-devel libmicrohttpd-devel
+        dnf install libmicrohttpd-devel
     Debian:
-        apt-get install libboost-all-dev libmicrohttpd-devel
+        apt-get install libmicrohttpd-devel
     Arch: 
-        pacman -Ss boost libmicrohttpd
+        pacman -Ss libmicrohttpd
 ```
 
 ### Initializing API
@@ -44,34 +44,21 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
     std::string const username = "Username", password = "Password", apikey = "ApiKey";
 
-    // List of Currencies to Trade
-    std::vector<std::string> const currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
-
     // Initialize GCapiClient
     gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
-```
-
-### Initializing Logging
-
-```c
-    // Send Logging to STD Output
-    gaincapital::GCapiClient::add_console_log(true);
-
-    // Send Logging to File
-    std::string const file_path = std::filesystem::current_path();
-    std::string const file_name = "mylogfile";
-    std::string const severity_level = "debug";
-    gaincapital::GCapiClient::initialize_logging_file(file_path, file_name, severity_level);
 ```
 
 ### Authenticating Session
 
 ```c
     // Required for First Authentication
-    if (! gc_api.authenticate_session()) { return 1; }
+    auto authentication_response = gc_api.authenticate_session();
 
-    // Authenticates Session Token if Expired
-    if (! gc_api.validate_session()) { return 1; }
+    if (! authentication_response)
+    {
+        std::cout << authentication_response.error().what() << '\n';
+        return 1;
+    }
 ```
 
 
@@ -79,19 +66,45 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
 ```c
     // Get Account Information
-    nlohmann::json account_response = gc_api.get_account_info();
+    auto account_response = gc_api.get_account_info();
+
+    if (! account_response)
+    {
+        std::cout << account_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access Account Information Json Response
+    nlohmann::json account_json = account_response.value();
 
     // Get Margin Information
-    nlohmann::json margin_response = gc_api.get_margin_info();
+    auto margin_response = gc_api.get_margin_info();
+
+    if (! margin_response)
+    {
+        std::cout << margin_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access Margin Information Json Response
+    nlohmann::json margin_json = margin_response.value();
 
 ```
 
 ### Market IDs & Information
 
 ```c
-    // Get Market IDs
-    // Sets Class Map with Market IDs
-    std::map<std::string, std::string> market_ids_response = gc_api.get_market_ids(currency_pairs);
+    // Get Info for Each Market
+    for (std::string const& market_name : currency_pairs)
+    {
+        // Get Market IDs
+        auto market_id_response = gc_api.get_market_id(market_name);
+
+        if (! market_id_response)
+        {
+            std::cout << market_id_response.error().what() << '\n';
+            return 1;
+        }
 ```
 
 ### Fetching OHLC Data
@@ -100,7 +113,32 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     // Get OHLC Bars
     std::string const interval = "MINUTE";
     int const num_ticks = 10;
-    std::map<std::string, nlohmann::json> ohlc_response = gc_api.get_ohlc(currency_pairs, interval, num_ticks);
+    auto ohlc_response = gc_api.get_ohlc(market_name, interval, num_ticks);
+
+    if (! ohlc_response)
+    {
+        std::cout << ohlc_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access OHLC Bars Json Response
+    nlohmann::json ohlc_json = ohlc_response.value();
+```
+
+### Fetching Price Data
+
+```c
+    // Get Currency Prices
+    auto price_response = gc_api.get_prices(market_name);
+
+    if (! price_response)
+    {
+        std::cout << price_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access Currency Prices Json Response
+    nlohmann::json price_json = price_response.value();
 ```
 
 ### Placing Trades
@@ -109,7 +147,16 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     // Place Market Order
     nlohmann::json trades_map_market = {};
     for (std::string const& symbol : currency_pairs) { trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}}; }
-    std::vector<std::string> const market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
+    auto market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
+
+    if (! market_order_response)
+    {
+        std::cout << market_order_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access Msrket Order Json Response
+    nlohmann::json market_order_json = market_order_response.value(); 
 
     // Place Limit Order
     nlohmann::json trades_map_limit = {};
@@ -121,36 +168,76 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
-    std::vector<std::string> const limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
+    auto limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
+
+    if (! limit_order_response)
+    {
+        std::cout << limit_order_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access Limit Order Json Response
+    nlohmann::json limit_order_json = limit_order_response.value(); 
 ```
 
 ### Monitoring Trades
 
 ```c
-    // Order Management
-    nlohmann::json active_order_response = gc_api.list_active_orders();
+    // Get Open Positions
+    auto open_position_response = gc_api.list_open_positions();
 
-    nlohmann::json open_position_response = gc_api.list_open_positions();
+    if (! open_position_response)
+    {
+        std::cout << open_position_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access Open Positions Json Response
+    nlohmann::json open_position_json = open_position_response.value();
+
+    // Get Active Orders
+    auto active_order_response = gc_api.list_active_orders();
+
+    if (! active_order_response)
+    {
+        std::cout << active_order_response.error().what() << '\n';
+        return 1;
+    }
+
+    // Access Active Order Json Response
+    nlohmann::json active_order_json = active_order_response.value();
 ```
 
 ### Canceling Active Orders
 
 ```c
     // Cancel Active Orders
-    for (nlohmann::json& active_order : active_order_response) 
-    {    
+    for (nlohmann::json& active_order : active_order_json)
+    {
         // Cancel Market Orders
-        if (active_order.contains("TradeOrder")) 
+        if (active_order.contains("TradeOrder"))
         {
             std::string const order_id = active_order["TradeOrder"]["OrderId"].dump();
-            nlohmann::json cancel_order_response = gc_api.cancel_order(order_id);
+            auto cancel_order_response = gc_api.cancel_order(order_id);
+
+            if (! cancel_order_response)
+            {
+                std::cout << cancel_order_response.error().what() << '\n';
+                return 1;
+            }
         }
 
         // Cancel Limit Orders
-        if (active_order.contains("StopLimitOrder")) 
+        if (active_order.contains("StopLimitOrder"))
         {
             std::string const order_id = active_order["StopLimitOrder"]["OrderId"].dump();
-            nlohmann::json cancel_order_response = gc_api.cancel_order(order_id);
+            auto cancel_order_response = gc_api.cancel_order(order_id);
+
+            if (! cancel_order_response)
+            {
+                std::cout << cancel_order_response.error().what() << '\n';
+                return 1;
+            }
         }
     }
 ```
@@ -168,7 +255,6 @@ To build the shared library and header files, run the commands below.
 
 ## Dependencies
 
-- [Boost](https://www.boost.org/) - *Must be installed by user*
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) - Required for Tests Only - *Must be installed by user*
 - [CPR](https://github.com/libcpr/cpr) - Included in CMake Fetch Content
 - [JSON](https://github.com/nlohmann/json) - .hpp file included in repository
