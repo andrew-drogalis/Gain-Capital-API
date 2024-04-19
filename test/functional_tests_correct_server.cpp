@@ -9,7 +9,7 @@
 #include "httpmockserver/mock_server.h"
 #include "httpmockserver/test_environment.h"
 
-#include "gain_capital_api.h"
+#include "gain_capital_client.h"
 #include "gain_capital_exception.h"
 
 namespace 
@@ -132,7 +132,7 @@ class HTTPMock: public httpmock::MockServer {
 // =================================================================================
 
 TEST(GainCapital_Functional_Server, Authenticate_Session_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
     auto resp = gc.authenticate_session();
@@ -151,7 +151,7 @@ TEST(GainCapital_Functional_Server, Authenticate_Session_Test) {
 
 
 TEST(GainCapital_Functional_Server, Validate_Session_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -169,7 +169,7 @@ TEST(GainCapital_Functional_Server, Validate_Session_Test) {
 
 
 TEST(GainCapital_Functional_Server, Get_Account_Info_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -189,7 +189,7 @@ TEST(GainCapital_Functional_Server, Get_Account_Info_Test) {
 
 
 TEST(GainCapital_Functional_Server, Get_Margin_Info_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
     gc.CLASS_trading_account_id = "TEST";
@@ -211,7 +211,7 @@ TEST(GainCapital_Functional_Server, Get_Margin_Info_Test) {
 
 
 TEST(GainCapital_Functional_Server, Get_Market_IDs_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -233,7 +233,7 @@ TEST(GainCapital_Functional_Server, Get_Market_IDs_Test) {
 
 
 TEST(GainCapital_Functional_Server, Get_Market_Info_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -257,7 +257,7 @@ TEST(GainCapital_Functional_Server, Get_Market_Info_Test) {
 // =================================================================================
 
 TEST(GainCapital_Functional_Server, Get_Prices_Basic_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -277,7 +277,7 @@ TEST(GainCapital_Functional_Server, Get_Prices_Basic_Test) {
 
 
 TEST(GainCapital_Functional_Server, Get_Prices_Test1) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -297,7 +297,7 @@ TEST(GainCapital_Functional_Server, Get_Prices_Test1) {
 
 
 TEST(GainCapital_Functional_Server, Get_Prices_Test2) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -317,7 +317,7 @@ TEST(GainCapital_Functional_Server, Get_Prices_Test2) {
 
 
 TEST(GainCapital_Functional_Server, Get_Prices_Test3) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -337,7 +337,7 @@ TEST(GainCapital_Functional_Server, Get_Prices_Test3) {
 
 
 TEST(GainCapital_Functional_Server, Get_Prices_FAILURE_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -346,7 +346,7 @@ TEST(GainCapital_Functional_Server, Get_Prices_FAILURE_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_prices(const std::string&, std::size_t, std::size_t, std::size_t, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_prices(const std::string&, std::size_t, std::size_t, std::size_t, std::string)");
         EXPECT_EQ(std::string(resp.error().what()), "Price Type Error - Provide one of the following price types: 'ASK', 'BID', 'MID'");
     }
     else
@@ -357,7 +357,7 @@ TEST(GainCapital_Functional_Server, Get_Prices_FAILURE_Test) {
 
 
 TEST(GainCapital_Functional_Server, Get_OHLC_Basic_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -377,7 +377,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_Basic_Test) {
 
 
 TEST(GainCapital_Functional_Server, Get_OHLC_Test1) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -397,7 +397,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_Test1) {
 
 
 TEST(GainCapital_Functional_Server, Get_OHLC_Test2) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -417,7 +417,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_Test2) {
 
 
 TEST(GainCapital_Functional_Server, Get_OHLC_Test3) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -437,7 +437,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_Test3) {
 
 
 TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test1) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -446,7 +446,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test1) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
         EXPECT_EQ(std::string(resp.error().what()), "Span Minute Error - Provide one of the following spans: 1, 2, 3, 5, 10, 15, 30");
     }
     else
@@ -457,7 +457,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test1) {
 
 
 TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test2) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -466,7 +466,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test2) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
         EXPECT_EQ(std::string(resp.error().what()), "Interval Error - Provide one of the following intervals: 'HOUR', 'MINUTE', 'DAY', 'WEEK', 'MONTH'");
     }
     else
@@ -477,7 +477,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test2) {
 
 
 TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test3) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -486,7 +486,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test3) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
         EXPECT_EQ(std::string(resp.error().what()), "Span Hour Error - Provide one of the following spans: 1, 2, 4, 8");
     }
     else
@@ -497,7 +497,7 @@ TEST(GainCapital_Functional_Server, Get_OHLC_FAILURE_Test3) {
 
 
 TEST(GainCapital_Functional_Server, Trade_Order_Market_Basic_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -521,7 +521,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_Market_Basic_Test) {
 
 
 TEST(GainCapital_Functional_Server, Trade_Order_Limit_Basic_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -545,7 +545,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_Limit_Basic_Test) {
 
 
 TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test1) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -558,7 +558,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test1) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
         EXPECT_EQ(std::string(resp.error().what()), "Trade Order Type Must Be 'MARKET' or 'LIMIT'");
     }
     else
@@ -569,7 +569,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test1) {
 
 
 TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test2) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -582,7 +582,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test2) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
         EXPECT_EQ(std::string(resp.error().what()), "Quantity Required for All Orders");
     }
     else
@@ -593,7 +593,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test2) {
 
 
 TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test3) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -606,7 +606,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test3) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
         EXPECT_EQ(std::string(resp.error().what()), "Direction Required for All Orders");
     }
     else
@@ -617,7 +617,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test3) {
 
 
 TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test4) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -630,7 +630,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test4) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
         EXPECT_EQ(std::string(resp.error().what()), "Trigger Price Required for Limit Orders");
     }
     else
@@ -645,7 +645,7 @@ TEST(GainCapital_Functional_Server, Trade_Order_FAILURE_Test4) {
 // =================================================================================
 
 TEST(GainCapital_Functional_Server, List_Open_Positions_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -665,7 +665,7 @@ TEST(GainCapital_Functional_Server, List_Open_Positions_Test) {
 
 
 TEST(GainCapital_Functional_Server, List_Active_Orders_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -685,7 +685,7 @@ TEST(GainCapital_Functional_Server, List_Active_Orders_Test) {
 
 
 TEST(GainCapital_Functional_Server, Cancel_Order_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 

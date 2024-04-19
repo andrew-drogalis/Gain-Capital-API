@@ -9,7 +9,7 @@
 #include "httpmockserver/mock_server.h"
 #include "httpmockserver/test_environment.h"
 
-#include "gain_capital_api.h"
+#include "gain_capital_client.h"
 #include "gain_capital_exception.h"
 
 namespace 
@@ -129,7 +129,7 @@ class HTTPMock: public httpmock::MockServer {
 
 
 TEST(GainCapital_Failed_Server, Authenticate_Session_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
     auto resp = gc.authenticate_session();
@@ -137,7 +137,7 @@ TEST(GainCapital_Failed_Server, Authenticate_Session_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCapiClient::set_trading_account_id()");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::set_trading_account_id()");
     }
     else
     {
@@ -147,7 +147,7 @@ TEST(GainCapital_Failed_Server, Authenticate_Session_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Validate_Session_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -167,7 +167,7 @@ TEST(GainCapital_Failed_Server, Validate_Session_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Get_Account_Info_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -176,7 +176,7 @@ TEST(GainCapital_Failed_Server, Get_Account_Info_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_account_info()");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_account_info()");
     }
     else
     {
@@ -186,7 +186,7 @@ TEST(GainCapital_Failed_Server, Get_Account_Info_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Get_Margin_Info_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -195,7 +195,7 @@ TEST(GainCapital_Failed_Server, Get_Margin_Info_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_margin_info()");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_margin_info()");
     }
     else
     {
@@ -205,7 +205,7 @@ TEST(GainCapital_Failed_Server, Get_Margin_Info_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Get_Market_IDs_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -214,7 +214,7 @@ TEST(GainCapital_Failed_Server, Get_Market_IDs_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_market_id(const std::string&)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_market_id(const std::string&)");
     }
     else
     {
@@ -224,7 +224,7 @@ TEST(GainCapital_Failed_Server, Get_Market_IDs_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Get_Market_Info_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -233,7 +233,7 @@ TEST(GainCapital_Failed_Server, Get_Market_Info_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_market_info(const std::string&)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_market_info(const std::string&)");
     }
     else
     {
@@ -243,7 +243,7 @@ TEST(GainCapital_Failed_Server, Get_Market_Info_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Get_Prices_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -252,7 +252,7 @@ TEST(GainCapital_Failed_Server, Get_Prices_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_prices(const std::string&, std::size_t, std::size_t, std::size_t, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_prices(const std::string&, std::size_t, std::size_t, std::size_t, std::string)");
     }
     else
     {
@@ -262,7 +262,7 @@ TEST(GainCapital_Failed_Server, Get_Prices_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Get_OHLC_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -271,7 +271,7 @@ TEST(GainCapital_Failed_Server, Get_OHLC_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_ohlc(const std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
     }
     else
     {
@@ -281,7 +281,7 @@ TEST(GainCapital_Failed_Server, Get_OHLC_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Trade_Order_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -294,7 +294,7 @@ TEST(GainCapital_Failed_Server, Trade_Order_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
     }
     else
     {
@@ -304,7 +304,7 @@ TEST(GainCapital_Failed_Server, Trade_Order_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, List_Open_Positions_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -313,7 +313,7 @@ TEST(GainCapital_Failed_Server, List_Open_Positions_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::list_open_positions(std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::list_open_positions(std::string)");
     }
     else
     {
@@ -323,7 +323,7 @@ TEST(GainCapital_Failed_Server, List_Open_Positions_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, List_Active_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -332,7 +332,7 @@ TEST(GainCapital_Failed_Server, List_Active_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::list_active_orders(std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::list_active_orders(std::string)");
     }
     else
     {
@@ -342,7 +342,7 @@ TEST(GainCapital_Failed_Server, List_Active_Failed_Server_Test) {
 
 
 TEST(GainCapital_Failed_Server, Cancel_Order_Failed_Server_Test) {
-    GC::GCapiClient gc("USER", "PASSWORD", "APIKEY");
+    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
     auto _ = gc.authenticate_session();
 
@@ -351,7 +351,7 @@ TEST(GainCapital_Failed_Server, Cancel_Order_Failed_Server_Test) {
     if (! resp) 
     {
         EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCapiClient::cancel_order(const std::string&, std::string)");
+        EXPECT_EQ(std::string(resp.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::cancel_order(const std::string&, std::string)");
     }
     else
     {

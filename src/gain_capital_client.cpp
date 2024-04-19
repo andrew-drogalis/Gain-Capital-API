@@ -1,13 +1,13 @@
 // Copyright 2024, Andrew Drogalis
 // GNU License
 
-#include "gain_capital_api.h"
+#include "gain_capital_client.h"
 
 #include <algorithm>       // for transform
 #include <array>           // for array
 #include <bits/chrono.h>   // for system_clock
 #include <ctype.h>         // for toupper
-#include <expected>        //  for expected
+#include <expected>        // for expected
 #include <initializer_list>// for initialize...
 #include <iostream>        // for operator<<
 #include <source_location> // for source_location...
@@ -25,7 +25,7 @@
 namespace gaincapital
 {
 
-GCapiClient::GCapiClient(std::string const& username, std::string const& password, std::string const& apikey)
+GCClient::GCClient(std::string const& username, std::string const& password, std::string const& apikey)
 {
     auth_payload = {{"UserName", username}, {"Password", password}, {"AppKey", apikey}};
 }
@@ -34,13 +34,12 @@ GCapiClient::GCapiClient(std::string const& username, std::string const& passwor
 // AUTHENTICATION
 // =================================================================================================================
 
-std::expected<bool, GCException> GCapiClient::authenticate_session()
+std::expected<bool, GCException> GCClient::authenticate_session()
 {
     /* * The first authentication of the user. This method MUST run before any other API request. */
     auto validation_response = validate_auth_payload();
     if (! validation_response) { return validation_response; }
     // -------------------
-
     cpr::Header const headers {{"Content-Type", "application/json"}};
     cpr::Url const url {rest_url_v2 + "/Session"};
     // -------------------
@@ -60,11 +59,11 @@ std::expected<bool, GCException> GCapiClient::authenticate_session()
 
     auto trading_account_resp = set_trading_account_id();
     if (! trading_account_resp) { return trading_account_resp; }
-
+    // -------------------
     return std::expected<bool, GCException> {true};
 }
 
-std::expected<bool, GCException> GCapiClient::set_trading_account_id()
+std::expected<bool, GCException> GCClient::set_trading_account_id()
 {
     /* * Sets the member variables CLASS_trading_account_id & CLASS_client_account_id. */
     cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
@@ -87,13 +86,12 @@ std::expected<bool, GCException> GCapiClient::set_trading_account_id()
     return std::expected<bool, GCException> {true};
 }
 
-std::expected<bool, GCException> GCapiClient::validate_session()
+std::expected<bool, GCException> GCClient::validate_session()
 {
     /* * Validates current session and updates if token expired. */
     auto validation_response = validate_session_header();
     if (! validation_response) { return validation_response; }
     // -------------------
-
     nlohmann::json payload = {{"ClientAccountId", CLASS_client_account_id},
                               {"UserName", session_header["Username"]},
                               {"Session", session_header["Session"]},
@@ -118,7 +116,7 @@ std::expected<bool, GCException> GCapiClient::validate_session()
 // =================================================================================================================
 // API CALLS
 // =================================================================================================================
-std::expected<nlohmann::json, GCException> GCapiClient::get_account_info()
+std::expected<nlohmann::json, GCException> GCClient::get_account_info()
 {
     /* Gets the trading account's general information.
        :return: trading account information
@@ -131,7 +129,7 @@ std::expected<nlohmann::json, GCException> GCapiClient::get_account_info()
     return make_network_call(session_header, url, "", "GET");
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::get_margin_info()
+std::expected<nlohmann::json, GCException> GCClient::get_margin_info()
 {
     /*  Gets the trading account's margin information.
         :return: trading account margin information
@@ -144,7 +142,7 @@ std::expected<nlohmann::json, GCException> GCapiClient::get_margin_info()
     return make_network_call(session_header, url, "", "GET");
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::get_market_id(std::string const& market_name)
+std::expected<nlohmann::json, GCException> GCClient::get_market_id(std::string const& market_name)
 {
     /* Gets the market information.
        :market_name: market name (e.g. USD/CAD)
@@ -173,7 +171,7 @@ std::expected<nlohmann::json, GCException> GCapiClient::get_market_id(std::strin
     return std::expected<nlohmann::json, GCException> {market_id};
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::get_market_info(std::string const& market_name)
+std::expected<nlohmann::json, GCException> GCClient::get_market_info(std::string const& market_name)
 {
     /* Gets the market information.
        :market_name: market name (e.g. USD/CAD)
@@ -187,8 +185,8 @@ std::expected<nlohmann::json, GCException> GCapiClient::get_market_info(std::str
     return make_network_call(session_header, url, "", "GET");
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::get_prices(std::string const& market_name, std::size_t const num_ticks,
-                                                                   std::size_t const from_ts, std::size_t const to_ts, std::string price_type)
+std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string const& market_name, std::size_t const num_ticks,
+                                                                std::size_t const from_ts, std::size_t const to_ts, std::string price_type)
 {
     /*  Get prices
         :param market_name: market name (e.g. USD/CAD)
@@ -242,8 +240,8 @@ std::expected<nlohmann::json, GCException> GCapiClient::get_prices(std::string c
     return make_network_call(session_header, url, "", "GET");
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::get_ohlc(std::string const& market_name, std::string interval, std::size_t const num_ticks,
-                                                                 std::size_t span, std::size_t const from_ts, std::size_t const to_ts)
+std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const& market_name, std::string interval, std::size_t const num_ticks,
+                                                              std::size_t span, std::size_t const from_ts, std::size_t const to_ts)
 {
     /*  Get the open, high, low, close of a specific market_id
         :param market_name: market name (e.g. USD/CAD)
@@ -325,7 +323,7 @@ std::expected<nlohmann::json, GCException> GCapiClient::get_ohlc(std::string con
     return make_network_call(session_header, url, "", "GET");
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id)
+std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id)
 {
     /*  Makes a new trade order
         :param trade_map: JSON object formatted as shown in the example below
@@ -359,46 +357,67 @@ std::expected<nlohmann::json, GCException> GCapiClient::trade_order(nlohmann::js
                                                            "Trade Order Type Must Be 'MARKET' or 'LIMIT'"};
     }
     // -------------------
+    std::string const market_name = trade_map.begin().key();
+    std::string market_id;
+    if (market_id_map.count(market_name)) { market_id = market_id_map[market_name]; }
+    else
+    {
+        auto response = get_market_id(market_name);
+        if (market_id_map.contains(market_name)) { market_id = market_id_map[market_name]; }
+        else
+        {
+            return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
+                                                               "Failure Fetching Market ID"};
+        }
+    }
+    // -------------------
+    // Check Trade Map Has Required Fields
+    if (trade_map[market_name]["Direction"].dump() == "null")
+    {
+        return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
+                                                           "Direction Required for All Orders"};
+    }
+    if (trade_map[market_name]["Quantity"].dump() == "null")
+    {
+        return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
+                                                           "Quantity Required for All Orders"};
+    }
+    if (type == "LIMIT" && trade_map[market_name]["TriggerPrice"].dump() == "null")
+    {
+        return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
+                                                           "Trigger Price Required for Limit Orders"};
+    }
+    // ---------------------------
+    std::vector<nlohmann::json> if_done;
+    if (type == "LIMIT")
+    {
+        if (trade_map[market_name]["StopPrice"].dump() != "null")
+        {
+            std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
+            nlohmann::json stop_order = {{"Stop",
+                                          {{"TriggerPrice", trade_map[market_name]["StopPrice"].dump()},
+                                           {"Direction", opp_direction},
+                                           {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
+            if_done.push_back(stop_order);
+        }
+
+        if (trade_map[market_name]["LimitPrice"].dump() != "null")
+        {
+            std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
+            nlohmann::json limit_order = {{"Limit",
+                                           {{"TriggerPrice", trade_map[market_name]["LimitPrice"].dump()},
+                                            {"Direction", opp_direction},
+                                            {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
+            if_done.push_back(limit_order);
+        }
+    }
+    // -------------------
     std::size_t current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
                                std::chrono::system_clock::period::den;
     int const RETRY_SECONDS = 5;
     std::size_t const stop_time = current_time + RETRY_SECONDS;
-    // -------------------
-    std::string const market_name = trade_map.begin().key();
-
-    cpr::Url const url = (type == "MARKET") ? cpr::Url {rest_url + "/order/newtradeorder"} : cpr::Url {rest_url + "/order/newstoplimitorder"};
-
     while (current_time <= stop_time)
     {
-        std::string market_id;
-        if (market_id_map.count(market_name)) { market_id = market_id_map[market_name]; }
-        else
-        {
-            auto response = get_market_id(market_name);
-            if (market_id_map.contains(market_name)) { market_id = market_id_map[market_name]; }
-            else
-            {
-                return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
-                                                                   "Failure Fetching Market ID"};
-            }
-        }
-        // Check Trade Map Has Required Fields
-        if (trade_map[market_name]["Direction"].dump() == "null")
-        {
-            return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
-                                                               "Direction Required for All Orders"};
-        }
-        if (trade_map[market_name]["Quantity"].dump() == "null")
-        {
-            return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
-                                                               "Quantity Required for All Orders"};
-        }
-        if (type == "LIMIT" && trade_map[market_name]["TriggerPrice"].dump() == "null")
-        {
-            return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
-                                                               "Trigger Price Required for Limit Orders"};
-        }
-        // -------------------
         std::string bid_price, offer_price;
 
         auto bid_response = get_prices(market_name, 1, 0, 0, "BID");
@@ -421,30 +440,6 @@ std::expected<nlohmann::json, GCException> GCapiClient::trade_order(nlohmann::js
         {
             return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
                                                                "JSON Key Error in Fetching Prices - Response: " + bid_json.dump()};
-        }
-        // ---------------------------
-        std::vector<nlohmann::json> if_done;
-        if (type == "LIMIT")
-        {
-            if (trade_map[market_name]["StopPrice"].dump() != "null")
-            {
-                std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
-                nlohmann::json stop_order = {{"Stop",
-                                              {{"TriggerPrice", trade_map[market_name]["StopPrice"].dump()},
-                                               {"Direction", opp_direction},
-                                               {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
-                if_done.push_back(stop_order);
-            }
-
-            if (trade_map[market_name]["LimitPrice"].dump() != "null")
-            {
-                std::string opp_direction = (trade_map[market_name]["Direction"] == "sell") ? "buy" : "sell";
-                nlohmann::json limit_order = {{"Limit",
-                                               {{"TriggerPrice", trade_map[market_name]["LimitPrice"].dump()},
-                                                {"Direction", opp_direction},
-                                                {"Quantity", trade_map[market_name]["Quantity"].dump()}}}};
-                if_done.push_back(limit_order);
-            }
         }
         // -------------------
         nlohmann::json trade_payload = {
@@ -469,6 +464,8 @@ std::expected<nlohmann::json, GCException> GCapiClient::trade_order(nlohmann::js
             trade_payload.update(additional_payload);
         }
         // -------------------
+        cpr::Url const url = (type == "MARKET") ? cpr::Url {rest_url + "/order/newtradeorder"} : cpr::Url {rest_url + "/order/newstoplimitorder"};
+
         auto resp = make_network_call(session_header, url, trade_payload.dump(), "POST");
 
         if (! resp) { return resp; }
@@ -487,7 +484,7 @@ std::expected<nlohmann::json, GCException> GCapiClient::trade_order(nlohmann::js
                                                        "Failed to Place Trade - Time Expired"};
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::list_open_positions(std::string tr_account_id)
+std::expected<nlohmann::json, GCException> GCClient::list_open_positions(std::string tr_account_id)
 {
     /* List of Open Positions in the trading account.
        :param trading_acc_id: trading account ID
@@ -496,16 +493,14 @@ std::expected<nlohmann::json, GCException> GCapiClient::list_open_positions(std:
     auto validate_response = validate_session();
     if (! validate_response) { return validate_response; }
     // -------------------
-
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
-
     // -------------------
     return make_network_call(session_header, url, "", "GET");// ["OpenPositions"]
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::list_active_orders(std::string tr_account_id)
+std::expected<nlohmann::json, GCException> GCClient::list_active_orders(std::string tr_account_id)
 {
     /* List of Active Order in the trading account.
        :param trading_acc_id: trading account ID
@@ -514,17 +509,15 @@ std::expected<nlohmann::json, GCException> GCapiClient::list_active_orders(std::
     auto validate_response = validate_session();
     if (! validate_response) { return validate_response; }
     // -------------------
-
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/activeorders"};
     nlohmann::json active_order_payload = {{"TradingAccountId", tr_account_id}, {"MaxResults", "100"}};
-
     // -------------------
     return make_network_call(session_header, url, active_order_payload.dump(), "POST");// ["ActiveOrders"]
 }
 
-std::expected<nlohmann::json, GCException> GCapiClient::cancel_order(std::string const& order_id, std::string tr_account_id)
+std::expected<nlohmann::json, GCException> GCClient::cancel_order(std::string const& order_id, std::string tr_account_id)
 {
     /* Cancels an Active Order
        :order_id: Order ID of the Order to Cancel
@@ -534,12 +527,10 @@ std::expected<nlohmann::json, GCException> GCapiClient::cancel_order(std::string
     auto validate_response = validate_session();
     if (! validate_response) { return validate_response; }
     // -------------------
-
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/cancel"};
     nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id}, {"OrderId", order_id}};
-
     // -------------------
     return make_network_call(session_header, url, cancel_order_payload.dump(), "POST");
 }
@@ -548,8 +539,8 @@ std::expected<nlohmann::json, GCException> GCapiClient::cancel_order(std::string
 // UTILITIES
 // =================================================================================================================
 
-std::expected<nlohmann::json, GCException> GCapiClient::make_network_call(cpr::Header const& header, cpr::Url const& url, std::string const& payload,
-                                                                          std::string const& type, std::source_location const& location)
+std::expected<nlohmann::json, GCException> GCClient::make_network_call(cpr::Header const& header, cpr::Url const& url, std::string const& payload,
+                                                                       std::string const& type, std::source_location const& location)
 {
     cpr::Response r;
     if (type == "POST") { r = cpr::Post(url, header, cpr::Body {payload}); }
@@ -568,7 +559,7 @@ std::expected<nlohmann::json, GCException> GCapiClient::make_network_call(cpr::H
     }
 }
 
-std::expected<bool, GCException> GCapiClient::validate_session_header() const
+std::expected<bool, GCException> GCClient::validate_session_header() const
 {
     if (session_header.empty())
     {
@@ -578,7 +569,7 @@ std::expected<bool, GCException> GCapiClient::validate_session_header() const
     return std::expected<bool, GCException> {true};
 }
 
-std::expected<bool, GCException> GCapiClient::validate_auth_payload() const
+std::expected<bool, GCException> GCClient::validate_auth_payload() const
 {
     if (auth_payload.empty())
     {
@@ -588,12 +579,12 @@ std::expected<bool, GCException> GCapiClient::validate_auth_payload() const
     return std::expected<bool, GCException> {true};
 }
 
-bool GCapiClient::validate_account_ids() const noexcept
+bool GCClient::validate_account_ids() const noexcept
 {
     if (CLASS_trading_account_id == "" || CLASS_client_account_id == "") { return false; }
     return true;
 }
 
-void GCapiClient::set_testing_rest_urls(std::string const& url) { rest_url = rest_url_v2 = url; }
+void GCClient::set_testing_rest_urls(std::string const& url) { rest_url = rest_url_v2 = url; }
 
 }// namespace gaincapital

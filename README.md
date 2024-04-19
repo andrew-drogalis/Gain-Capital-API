@@ -40,19 +40,19 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 ### Initializing API
 
 ```c
-    #include <gain_capital_api.h>
+    #include <gain_capital_client.h>
 
     std::string const username = "Username", password = "Password", apikey = "ApiKey";
 
-    // Initialize GCapiClient
-    gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
+    // Initialize GCClient
+    gaincapital::GCClient gc_client = gaincapital::GCClient(username, password, apikey);
 ```
 
 ### Authenticating Session
 
 ```c
     // Required for First Authentication
-    auto authentication_response = gc_api.authenticate_session();
+    auto authentication_response = gc_client.authenticate_session();
 
     if (! authentication_response)
     {
@@ -66,7 +66,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
 ```c
     // Get Account Information
-    auto account_response = gc_api.get_account_info();
+    auto account_response = gc_client.get_account_info();
 
     if (! account_response)
     {
@@ -78,7 +78,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     nlohmann::json account_json = account_response.value();
 
     // Get Margin Information
-    auto margin_response = gc_api.get_margin_info();
+    auto margin_response = gc_client.get_margin_info();
 
     if (! margin_response)
     {
@@ -98,7 +98,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     for (std::string const& market_name : currency_pairs)
     {
         // Get Market IDs
-        auto market_id_response = gc_api.get_market_id(market_name);
+        auto market_id_response = gc_client.get_market_id(market_name);
 
         if (! market_id_response)
         {
@@ -113,7 +113,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     // Get OHLC Bars
     std::string const interval = "MINUTE";
     int const num_ticks = 10;
-    auto ohlc_response = gc_api.get_ohlc(market_name, interval, num_ticks);
+    auto ohlc_response = gc_client.get_ohlc(market_name, interval, num_ticks);
 
     if (! ohlc_response)
     {
@@ -129,7 +129,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
 ```c
     // Get Currency Prices
-    auto price_response = gc_api.get_prices(market_name);
+    auto price_response = gc_client.get_prices(market_name);
 
     if (! price_response)
     {
@@ -147,7 +147,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     // Place Market Order
     nlohmann::json trades_map_market = {};
     for (std::string const& symbol : currency_pairs) { trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}}; }
-    auto market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
+    auto market_order_response = gc_client.trade_order(trades_map_market, "MARKET");
 
     if (! market_order_response)
     {
@@ -168,7 +168,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
         trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
     }
-    auto limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
+    auto limit_order_response = gc_client.trade_order(trades_map_limit, "LIMIT");
 
     if (! limit_order_response)
     {
@@ -184,7 +184,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
 
 ```c
     // Get Open Positions
-    auto open_position_response = gc_api.list_open_positions();
+    auto open_position_response = gc_client.list_open_positions();
 
     if (! open_position_response)
     {
@@ -196,7 +196,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
     nlohmann::json open_position_json = open_position_response.value();
 
     // Get Active Orders
-    auto active_order_response = gc_api.list_active_orders();
+    auto active_order_response = gc_client.list_active_orders();
 
     if (! active_order_response)
     {
@@ -218,7 +218,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
         if (active_order.contains("TradeOrder"))
         {
             std::string const order_id = active_order["TradeOrder"]["OrderId"].dump();
-            auto cancel_order_response = gc_api.cancel_order(order_id);
+            auto cancel_order_response = gc_client.cancel_order(order_id);
 
             if (! cancel_order_response)
             {
@@ -231,7 +231,7 @@ Please see a link to required dependencies [below](#Dependencies). If you are us
         if (active_order.contains("StopLimitOrder"))
         {
             std::string const order_id = active_order["StopLimitOrder"]["OrderId"].dump();
-            auto cancel_order_response = gc_api.cancel_order(order_id);
+            auto cancel_order_response = gc_client.cancel_order(order_id);
 
             if (! cancel_order_response)
             {

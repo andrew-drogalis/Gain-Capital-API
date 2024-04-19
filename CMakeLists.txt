@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(
-  gain_capital_api
-  VERSION 2.0.0
+  gain_capital_client
+  VERSION 2.0.1
   DESCRIPTION "Unofficial C++ API for Gain Capital's Forex.com.")
 
 set(CMAKE_CXX_STANDARD 23)
@@ -10,7 +10,7 @@ set(CMAKE_BUILD_TYPE "Debug")
 
 include(GNUInstallDirs)
 
-add_library(${PROJECT_NAME} SHARED src/gain_capital_api.cpp src/gain_capital_exception.cpp)
+add_library(${PROJECT_NAME} SHARED src/gain_capital_client.cpp src/gain_capital_exception.cpp)
 
 set_target_properties(
   ${PROJECT_NAME}
@@ -89,7 +89,7 @@ add_subdirectory(test)
 # ===================================================================
 # Build Example Executable
 # ===================================================================
-add_executable(Example examples/example.cpp src/gain_capital_api.cpp src/gain_capital_exception.cpp)
+add_executable(Example examples/example.cpp src/gain_capital_client.cpp src/gain_capital_exception.cpp)
 
 target_include_directories(Example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

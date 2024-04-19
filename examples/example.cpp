@@ -6,7 +6,7 @@
 
 #include "json/json.hpp"
 
-#include "gain_capital_api.h"
+#include "gain_capital_client.h"
 
 int main()
 {
@@ -17,10 +17,10 @@ int main()
     std::vector<std::string> const currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
 
     // Initialize GCapiClient
-    gaincapital::GCapiClient gc_api = gaincapital::GCapiClient(username, password, apikey);
+    gaincapital::GCClient gc_client = gaincapital::GCClient(username, password, apikey);
 
     // Required for First Authentication
-    auto authentication_response = gc_api.authenticate_session();
+    auto authentication_response = gc_client.authenticate_session();
 
     if (! authentication_response)
     {
@@ -29,7 +29,7 @@ int main()
     }
 
     // Get Account Information
-    auto account_response = gc_api.get_account_info();
+    auto account_response = gc_client.get_account_info();
 
     if (! account_response)
     {
@@ -41,7 +41,7 @@ int main()
     nlohmann::json account_json = account_response.value();
 
     // Get Margin Information
-    auto margin_response = gc_api.get_margin_info();
+    auto margin_response = gc_client.get_margin_info();
 
     if (! margin_response)
     {
@@ -56,7 +56,7 @@ int main()
     for (std::string const& market_name : currency_pairs)
     {
         // Get Market IDs
-        auto market_id_response = gc_api.get_market_id(market_name);
+        auto market_id_response = gc_client.get_market_id(market_name);
 
         if (! market_id_response)
         {
@@ -65,7 +65,7 @@ int main()
         }
 
         // Get Currency Prices
-        auto price_response = gc_api.get_prices(market_name);
+        auto price_response = gc_client.get_prices(market_name);
 
         if (! price_response)
         {
@@ -79,7 +79,7 @@ int main()
         // Get OHLC Bars
         std::string const interval = "MINUTE";
         int const num_ticks = 10;
-        auto ohlc_response = gc_api.get_ohlc(market_name, interval, num_ticks);
+        auto ohlc_response = gc_client.get_ohlc(market_name, interval, num_ticks);
 
         if (! ohlc_response)
         {
@@ -93,7 +93,7 @@ int main()
         // Place Market Order
         nlohmann::json trades_map_market = {};
         for (std::string const& symbol : currency_pairs) { trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}}; }
-        auto market_order_response = gc_api.trade_order(trades_map_market, "MARKET");
+        auto market_order_response = gc_client.trade_order(trades_map_market, "MARKET");
 
         if (! market_order_response)
         {
@@ -102,8 +102,7 @@ int main()
         }
 
         // Access Market Order Json Response
-        nlohmann::json market_order_json = market_order_response.value(); 
-        
+        nlohmann::json market_order_json = market_order_response.value();
 
         // Place Limit Order
         nlohmann::json trades_map_limit = {};
@@ -115,7 +114,7 @@ int main()
 
             trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
         }
-        auto limit_order_response = gc_api.trade_order(trades_map_limit, "LIMIT");
+        auto limit_order_response = gc_client.trade_order(trades_map_limit, "LIMIT");
 
         if (! limit_order_response)
         {
@@ -124,11 +123,11 @@ int main()
         }
 
         // Access Limit Order Json Response
-        nlohmann::json limit_order_json = limit_order_response.value(); 
+        nlohmann::json limit_order_json = limit_order_response.value();
     }
 
     // Get Open Positions
-    auto open_position_response = gc_api.list_open_positions();
+    auto open_position_response = gc_client.list_open_positions();
 
     if (! open_position_response)
     {
@@ -140,7 +139,7 @@ int main()
     nlohmann::json open_position_json = open_position_response.value();
 
     // Get Active Orders
-    auto active_order_response = gc_api.list_active_orders();
+    auto active_order_response = gc_client.list_active_orders();
 
     if (! active_order_response)
     {
@@ -158,7 +157,7 @@ int main()
         if (active_order.contains("TradeOrder"))
         {
             std::string const order_id = active_order["TradeOrder"]["OrderId"].dump();
-            auto cancel_order_response = gc_api.cancel_order(order_id);
+            auto cancel_order_response = gc_client.cancel_order(order_id);
 
             if (! cancel_order_response)
             {
@@ -171,7 +170,7 @@ int main()
         if (active_order.contains("StopLimitOrder"))
         {
             std::string const order_id = active_order["StopLimitOrder"]["OrderId"].dump();
-            auto cancel_order_response = gc_api.cancel_order(order_id);
+            auto cancel_order_response = gc_client.cancel_order(order_id);
 
             if (! cancel_order_response)
             {

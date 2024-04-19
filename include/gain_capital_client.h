@@ -1,8 +1,8 @@
 // Copyright 2024, Andrew Drogalis
 // GNU License
 
-#ifndef GAIN_CAPITAL_API_H
-#define GAIN_CAPITAL_API_H
+#ifndef GAIN_CAPITAL_CLIENT_H
+#define GAIN_CAPITAL_CLIENT_H
 
 #include <cstddef>        // for size_t
 #include <expected>       // for expected
@@ -17,7 +17,7 @@
 namespace gaincapital
 {
 
-class GCapiClient
+class GCClient
 {
 
   public:
@@ -25,20 +25,20 @@ class GCapiClient
     std::string CLASS_client_account_id;
     std::unordered_map<std::string, std::string> market_id_map;
 
-    GCapiClient() = default;
+    GCClient() = default;
 
-    GCapiClient(std::string const& username, std::string const& password, std::string const& appkey);
+    GCClient(std::string const& username, std::string const& password, std::string const& appkey);
 
-    ~GCapiClient() = default;
+    ~GCClient() = default;
 
     // Move ONLY | No Copy Constructor
-    GCapiClient(GCapiClient const& obj) = delete;
+    GCClient(GCClient const& obj) = delete;
 
-    GCapiClient& operator=(GCapiClient const& obj) = delete;
+    GCClient& operator=(GCClient const& obj) = delete;
 
-    GCapiClient(GCapiClient&& obj) = default;
+    GCClient(GCClient&& obj) = default;
 
-    GCapiClient& operator=(GCapiClient&& obj) = default;
+    GCClient& operator=(GCClient&& obj) = default;
 
     // =================================================================================================================
     // AUTHENTICATION
