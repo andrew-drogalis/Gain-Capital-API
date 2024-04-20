@@ -5,7 +5,7 @@
 
 #include <algorithm>       // for transform
 #include <array>           // for array
-#include <bits/chrono.h>   // for system_clock
+#include <chrono>          // for system_clock
 #include <ctype.h>         // for toupper
 #include <expected>        // for expected
 #include <initializer_list>// for initialize...
@@ -544,7 +544,20 @@ std::expected<nlohmann::json, GCException> GCClient::make_network_call(cpr::Head
     if (type == "POST") { r = cpr::Post(url, header, cpr::Body {payload}); }
     else if (type == "GET") { r = cpr::Get(url, header); }
     // -------------------
-    if (r.status_code == 200) { return std::expected<nlohmann::json, GCException> {nlohmann::json::parse(r.text)}; }
+    if (r.status_code == 200)
+    {
+        nlohmann::json response;
+        try
+        {
+            response = nlohmann::json::parse(r.text);
+        }
+        catch (nlohmann::json::exception const& e)
+        {
+            return std::expected<nlohmann::json, GCException> {std::unexpect, location.function_name(), e.what()};
+        }
+        // -------------------
+        return std::expected<nlohmann::json, GCException> {response};
+    }
     else if (! r.status_code)
     {
         return std::expected<bool, GCException> {std::unexpect, location.function_name(),

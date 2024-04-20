@@ -37,9 +37,9 @@ class GCClient
 
     GCClient& operator=(GCClient const& obj) = delete;
 
-    GCClient(GCClient&& obj) = default;
+    GCClient(GCClient&& obj) noexcept = default;
 
-    GCClient& operator=(GCClient&& obj) = default;
+    GCClient& operator=(GCClient&& obj) noexcept = default;
 
     // =================================================================================================================
     // AUTHENTICATION
