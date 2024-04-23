@@ -347,7 +347,7 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     */
     auto validation_response = validate_session_header();
     if (! validation_response) { return validation_response; }
-    // -------------------
+    
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
     // -------------------
     std::transform(type.begin(), type.end(), type.begin(), ::toupper);
@@ -490,7 +490,7 @@ std::expected<nlohmann::json, GCException> GCClient::list_open_positions(std::st
     */
     auto validate_response = validate_session();
     if (! validate_response) { return validate_response; }
-    // -------------------
+
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
@@ -506,7 +506,7 @@ std::expected<nlohmann::json, GCException> GCClient::list_active_orders(std::str
     */
     auto validate_response = validate_session();
     if (! validate_response) { return validate_response; }
-    // -------------------
+
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/activeorders"};
@@ -524,7 +524,7 @@ std::expected<nlohmann::json, GCException> GCClient::cancel_order(std::string co
     */
     auto validate_response = validate_session();
     if (! validate_response) { return validate_response; }
-    // -------------------
+
     if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
 
     cpr::Url const url {rest_url + "/order/cancel"};
