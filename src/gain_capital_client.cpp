@@ -39,14 +39,20 @@ std::expected<bool, GCException> GCClient::authenticate_session()
 {
     /* * The first authentication of the user. This method MUST run before any other API request. */
     auto validation_response = validate_auth_payload();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     cpr::Header const headers {{"Content-Type", "application/json"}};
     cpr::Url const url {rest_url_v2 + "/Session"};
     // -------------------
     auto resp = make_network_call(headers, url, auth_payload.dump(), "POST");
 
-    if (! resp) { return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())}; }
+    if (! resp)
+    {
+        return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())};
+    }
 
     nlohmann::json json = resp.value();
 
@@ -59,7 +65,10 @@ std::expected<bool, GCException> GCClient::authenticate_session()
     session_header = {{"Content-Type", "application/json"}, {"UserName", auth_payload["UserName"]}, {"Session", json["session"].dump()}};
 
     auto trading_account_resp = set_trading_account_id();
-    if (! trading_account_resp) { return trading_account_resp; }
+    if (! trading_account_resp)
+    {
+        return trading_account_resp;
+    }
     // -------------------
     return std::expected<bool, GCException> {true};
 }
@@ -71,7 +80,10 @@ std::expected<bool, GCException> GCClient::set_trading_account_id()
     // -------------------
     auto resp = make_network_call(session_header, url, "", "GET");
 
-    if (! resp) { return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())}; }
+    if (! resp)
+    {
+        return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())};
+    }
 
     nlohmann::json json = resp.value();
 
@@ -91,7 +103,10 @@ std::expected<bool, GCException> GCClient::validate_session()
 {
     /* * Validates current session and updates if token expired. */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     nlohmann::json payload = {{"ClientAccountId", CLASS_client_account_id},
                               {"UserName", session_header["Username"]},
@@ -101,14 +116,20 @@ std::expected<bool, GCException> GCClient::validate_session()
 
     auto resp = make_network_call(session_header, url, payload.dump(), "POST");
 
-    if (! resp) { return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())}; }
+    if (! resp)
+    {
+        return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())};
+    }
 
     nlohmann::json json = resp.value();
 
     if (json["isAuthenticated"].dump() != "true")
     {
         auto authentication_response = authenticate_session();
-        if (! authentication_response) { return authentication_response; }
+        if (! authentication_response)
+        {
+            return authentication_response;
+        }
     }
     // -------------------
     return std::expected<bool, GCException> {true};
@@ -123,7 +144,10 @@ std::expected<nlohmann::json, GCException> GCClient::get_account_info()
        :return: trading account information
     */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
     // -------------------
@@ -136,7 +160,10 @@ std::expected<nlohmann::json, GCException> GCClient::get_margin_info()
         :return: trading account margin information
     */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     cpr::Url const url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + CLASS_client_account_id};
     // -------------------
@@ -150,13 +177,19 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_id(std::string c
        :return: market information
     */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
 
     auto resp = make_network_call(session_header, url, "", "GET");
 
-    if (! resp) { return resp; }
+    if (! resp)
+    {
+        return resp;
+    }
 
     nlohmann::json json = resp.value();
 
@@ -179,7 +212,10 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_info(std::string
        :return: market information
     */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
     // -------------------
@@ -197,7 +233,10 @@ std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string cons
         :return: price data
   */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     std::transform(price_type.begin(), price_type.end(), price_type.begin(), ::toupper);
 
@@ -208,11 +247,17 @@ std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string cons
     }
     // -------------------
     std::string market_id = "";
-    if (market_id_map.count(market_name)) { market_id = market_id_map[market_name]; }
+    if (market_id_map.count(market_name))
+    {
+        market_id = market_id_map[market_name];
+    }
     else
     {
         auto response = get_market_id(market_name);
-        if (market_id_map.contains(market_name)) { market_id = market_id_map[market_name]; }
+        if (market_id_map.contains(market_name))
+        {
+            market_id = market_id_map[market_name];
+        }
         else
         {
             return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
@@ -236,7 +281,10 @@ std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string cons
         url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistoryafter?maxResults=" + std::to_string(num_ticks) +
                         "&fromTimestampUTC=" + std::to_string(from_ts) + "&priceType=" + price_type};
     }
-    else { url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type}; }
+    else
+    {
+        url = cpr::Url {rest_url + "/market/" + market_id + "/tickhistory?PriceTicks=" + std::to_string(num_ticks) + "&priceType=" + price_type};
+    }
     // -------------------
     return make_network_call(session_header, url, "", "GET");
 }
@@ -253,7 +301,10 @@ std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const&
         :return: ohlc dataframe
     */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
     // -------------------
     std::transform(interval.begin(), interval.end(), interval.begin(), ::toupper);
 
@@ -284,14 +335,23 @@ std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const&
                                                                "Span Minute Error - Provide one of the following spans: 1, 2, 3, 5, 10, 15, 30"};
         }
     }
-    else { span = 1; }
+    else
+    {
+        span = 1;
+    }
     // -------------------
     std::string market_id;
-    if (market_id_map.count(market_name)) { market_id = market_id_map[market_name]; }
+    if (market_id_map.count(market_name))
+    {
+        market_id = market_id_map[market_name];
+    }
     else
     {
         auto response = get_market_id(market_name);
-        if (market_id_map.contains(market_name)) { market_id = market_id_map[market_name]; }
+        if (market_id_map.contains(market_name))
+        {
+            market_id = market_id_map[market_name];
+        }
         else
         {
             return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
@@ -346,9 +406,15 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
             }}
     */
     auto validation_response = validate_session_header();
-    if (! validation_response) { return validation_response; }
-    
-    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
+    if (! validation_response)
+    {
+        return validation_response;
+    }
+
+    if (tr_account_id.empty())
+    {
+        tr_account_id = CLASS_trading_account_id;
+    }
     // -------------------
     std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 
@@ -360,11 +426,17 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     // -------------------
     std::string const market_name = trade_map.begin().key();
     std::string market_id;
-    if (market_id_map.count(market_name)) { market_id = market_id_map[market_name]; }
+    if (market_id_map.count(market_name))
+    {
+        market_id = market_id_map[market_name];
+    }
     else
     {
         auto response = get_market_id(market_name);
-        if (market_id_map.contains(market_name)) { market_id = market_id_map[market_name]; }
+        if (market_id_map.contains(market_name))
+        {
+            market_id = market_id_map[market_name];
+        }
         else
         {
             return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
@@ -466,11 +538,17 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
 
         auto resp = make_network_call(session_header, url, trade_payload.dump(), "POST");
 
-        if (! resp) { return resp; }
+        if (! resp)
+        {
+            return resp;
+        }
 
         nlohmann::json json = resp.value();
 
-        if (json.contains("OrderId") && json["OrderId"].is_number_integer() || json["OrderId"] != 0) { return resp; }
+        if (json.contains("OrderId") && json["OrderId"].is_number_integer() || json["OrderId"] != 0)
+        {
+            return resp;
+        }
         // -----------------------
         // Pause Before Retry
         sleep(1);
@@ -489,9 +567,15 @@ std::expected<nlohmann::json, GCException> GCClient::list_open_positions(std::st
        :return JSON response
     */
     auto validate_response = validate_session();
-    if (! validate_response) { return validate_response; }
+    if (! validate_response)
+    {
+        return validate_response;
+    }
 
-    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
+    if (tr_account_id.empty())
+    {
+        tr_account_id = CLASS_trading_account_id;
+    }
 
     cpr::Url const url {rest_url + "/order/openpositions?TradingAccountId=" + tr_account_id};
     // -------------------
@@ -505,9 +589,15 @@ std::expected<nlohmann::json, GCException> GCClient::list_active_orders(std::str
        :return JSON response
     */
     auto validate_response = validate_session();
-    if (! validate_response) { return validate_response; }
+    if (! validate_response)
+    {
+        return validate_response;
+    }
 
-    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
+    if (tr_account_id.empty())
+    {
+        tr_account_id = CLASS_trading_account_id;
+    }
 
     cpr::Url const url {rest_url + "/order/activeorders"};
     nlohmann::json active_order_payload = {{"TradingAccountId", tr_account_id}, {"MaxResults", "100"}};
@@ -523,9 +613,15 @@ std::expected<nlohmann::json, GCException> GCClient::cancel_order(std::string co
        :return JSON response
     */
     auto validate_response = validate_session();
-    if (! validate_response) { return validate_response; }
+    if (! validate_response)
+    {
+        return validate_response;
+    }
 
-    if (tr_account_id.empty()) { tr_account_id = CLASS_trading_account_id; }
+    if (tr_account_id.empty())
+    {
+        tr_account_id = CLASS_trading_account_id;
+    }
 
     cpr::Url const url {rest_url + "/order/cancel"};
     nlohmann::json cancel_order_payload = {{"TradingAccountId", tr_account_id}, {"OrderId", order_id}};
@@ -541,8 +637,14 @@ std::expected<nlohmann::json, GCException> GCClient::make_network_call(cpr::Head
                                                                        std::string const& type, std::source_location const& location)
 {
     cpr::Response r;
-    if (type == "POST") { r = cpr::Post(url, header, cpr::Body {payload}); }
-    else if (type == "GET") { r = cpr::Get(url, header); }
+    if (type == "POST")
+    {
+        r = cpr::Post(url, header, cpr::Body {payload});
+    }
+    else if (type == "GET")
+    {
+        r = cpr::Get(url, header);
+    }
     // -------------------
     if (r.status_code == 200)
     {
@@ -592,7 +694,10 @@ std::expected<bool, GCException> GCClient::validate_auth_payload() const
 
 bool GCClient::validate_account_ids() const noexcept
 {
-    if (CLASS_trading_account_id == "" || CLASS_client_account_id == "") { return false; }
+    if (CLASS_trading_account_id == "" || CLASS_client_account_id == "")
+    {
+        return false;
+    }
     return true;
 }
 
