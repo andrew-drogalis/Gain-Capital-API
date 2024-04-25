@@ -16,14 +16,15 @@ int main()
     // List of Currencies to Trade
     std::vector<std::string> const currency_pairs = {"USD/CHF", "EUR/USD", "GBP/USD"};
 
-    // Initialize GCapiClient
+    // Initialize GCClient
     gaincapital::GCClient gc_client = gaincapital::GCClient(username, password, apikey);
 
-    // Required for First Authentication
+    // Must Be Run Before All Other API Requests
     auto authentication_response = gc_client.authenticate_session();
 
     if (! authentication_response)
     {
+        std::cout << "Error Location: " << authentication_response.error().where() << '\n';
         std::cout << authentication_response.error().what() << '\n';
         return 1;
     }
@@ -33,6 +34,7 @@ int main()
 
     if (! account_response)
     {
+        std::cout << "Error Location: " << account_response.error().where() << '\n';
         std::cout << account_response.error().what() << '\n';
         return 1;
     }
@@ -45,6 +47,7 @@ int main()
 
     if (! margin_response)
     {
+        std::cout << "Error Location: " << margin_response.error().where() << '\n';
         std::cout << margin_response.error().what() << '\n';
         return 1;
     }
@@ -60,6 +63,7 @@ int main()
 
         if (! market_id_response)
         {
+            std::cout << "Error Location: " << market_id_response.error().where() << '\n';
             std::cout << market_id_response.error().what() << '\n';
             return 1;
         }
@@ -69,6 +73,7 @@ int main()
 
         if (! price_response)
         {
+            std::cout << "Error Location: " << price_response.error().where() << '\n';
             std::cout << price_response.error().what() << '\n';
             return 1;
         }
@@ -79,10 +84,12 @@ int main()
         // Get OHLC Bars
         std::string const interval = "MINUTE";
         int const num_ticks = 10;
+
         auto ohlc_response = gc_client.get_ohlc(market_name, interval, num_ticks);
 
         if (! ohlc_response)
         {
+            std::cout << "Error Location: " << ohlc_response.error().where() << '\n';
             std::cout << ohlc_response.error().what() << '\n';
             return 1;
         }
@@ -92,11 +99,14 @@ int main()
 
         // Place Market Order
         nlohmann::json trades_map_market = {};
+
         for (std::string const& symbol : currency_pairs) { trades_map_market[symbol] = {{"Direction", "sell"}, {"Quantity", 1000}}; }
+
         auto market_order_response = gc_client.trade_order(trades_map_market, "MARKET");
 
         if (! market_order_response)
         {
+            std::cout << "Error Location: " << market_order_response.error().where() << '\n';
             std::cout << market_order_response.error().what() << '\n';
             return 1;
         }
@@ -106,18 +116,21 @@ int main()
 
         // Place Limit Order
         nlohmann::json trades_map_limit = {};
+
         for (std::string const& symbol : currency_pairs)
         {
-            float const mid_price = static_cast<float>(price_json["PriceTicks"][0]["Price"]);
+            float const mid_price = price_json["PriceTicks"][0]["Price"];
             float const trigger_price = mid_price * 1.1;
             float const stop_price = mid_price * 0.9;
 
             trades_map_limit[symbol] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", trigger_price}, {"StopPrice", stop_price}};
         }
+
         auto limit_order_response = gc_client.trade_order(trades_map_limit, "LIMIT");
 
         if (! limit_order_response)
         {
+            std::cout << "Error Location: " << limit_order_response.error().where() << '\n';
             std::cout << limit_order_response.error().what() << '\n';
             return 1;
         }
@@ -131,6 +144,7 @@ int main()
 
     if (! open_position_response)
     {
+        std::cout << "Error Location: " << open_position_response.error().where() << '\n';
         std::cout << open_position_response.error().what() << '\n';
         return 1;
     }
@@ -143,6 +157,7 @@ int main()
 
     if (! active_order_response)
     {
+        std::cout << "Error Location: " << active_order_response.error().where() << '\n';
         std::cout << active_order_response.error().what() << '\n';
         return 1;
     }
@@ -161,6 +176,7 @@ int main()
 
             if (! cancel_order_response)
             {
+                std::cout << "Error Location: " << cancel_order_response.error().where() << '\n';
                 std::cout << cancel_order_response.error().what() << '\n';
                 return 1;
             }
@@ -174,6 +190,7 @@ int main()
 
             if (! cancel_order_response)
             {
+                std::cout << "Error Location: " << cancel_order_response.error().where() << '\n';
                 std::cout << cancel_order_response.error().what() << '\n';
                 return 1;
             }
