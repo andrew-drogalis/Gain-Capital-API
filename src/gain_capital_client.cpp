@@ -218,10 +218,11 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_id(std::string c
 
 std::expected<nlohmann::json, GCException> GCClient::get_market_info(std::string const& market_name)
 {
-    /* Gets the market information.
-       :market_name: market name (e.g. USD/CAD)
-       :return: market information
-    */
+    /*
+     * Gets the market information.
+     * :market_name: market name (e.g. USD/CAD)
+     * :return: market information
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -236,14 +237,14 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_info(std::string
 std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string const& market_name, std::size_t const num_ticks,
                                                                 std::size_t const from_ts, std::size_t const to_ts, std::string price_type)
 {
-    /*  
-    * Get prices
-       * :param market_name: market name (e.g. USD/CAD)
-       * :param num_ticks: number of price ticks/data to retrieve
-       * :param from_ts: from timestamp UTC
-       * :param to_ts: to timestamp UTC
-       * :return: price data
-  */
+    /*
+     * Get prices
+     * :param market_name: market name (e.g. USD/CAD)
+     * :param num_ticks: number of price ticks/data to retrieve
+     * :param from_ts: from timestamp UTC
+     * :param to_ts: to timestamp UTC
+     * :return: price data
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -311,7 +312,7 @@ std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const&
      * :param interval: MINUTE, HOUR or DAY tick interval
      * :param span: it can be a combination of span with interval, 1Hour, 15 MINUTE
      * :param from_ts: from timestamp UTC :param to_ts: to timestamp UTC
-     * :return: ohlc dataframe 
+     * :return: ohlc dataframe
      */
     auto validation_response = validate_session_header();
     if (! validation_response)

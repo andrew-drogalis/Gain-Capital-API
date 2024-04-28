@@ -122,7 +122,8 @@ TEST(GainCapital_Failed_Server, Authenticate_Session_Failed_Server_Test)
     if (! network_response)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(network_response.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::set_trading_account_id()");
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::set_trading_account_id()");
     }
     else
     {
@@ -202,7 +203,7 @@ TEST(GainCapital_Failed_Server, Get_Market_IDs_Failed_Server_Test)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
         EXPECT_EQ(std::string(network_response.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> "
-                                                     "gaincapital::GCClient::get_market_id(const std::string&)");
+                                                                 "gaincapital::GCClient::get_market_id(const std::string&)");
     }
     else
     {
@@ -222,7 +223,7 @@ TEST(GainCapital_Failed_Server, Get_Market_Info_Failed_Server_Test)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
         EXPECT_EQ(std::string(network_response.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> "
-                                                     "gaincapital::GCClient::get_market_info(const std::string&)");
+                                                                 "gaincapital::GCClient::get_market_info(const std::string&)");
     }
     else
     {
@@ -309,7 +310,7 @@ TEST(GainCapital_Failed_Server, List_Open_Positions_Failed_Server_Test)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
         EXPECT_EQ(std::string(network_response.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> "
-                                                     "gaincapital::GCClient::list_open_positions(std::string)");
+                                                                 "gaincapital::GCClient::list_open_positions(std::string)");
     }
     else
     {
@@ -329,7 +330,7 @@ TEST(GainCapital_Failed_Server, List_Active_Failed_Server_Test)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
         EXPECT_EQ(std::string(network_response.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> "
-                                                     "gaincapital::GCClient::list_active_orders(std::string)");
+                                                                 "gaincapital::GCClient::list_active_orders(std::string)");
     }
     else
     {
@@ -349,7 +350,7 @@ TEST(GainCapital_Failed_Server, Cancel_Order_Failed_Server_Test)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
         EXPECT_EQ(std::string(network_response.error().where()), "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> "
-                                                     "gaincapital::GCClient::cancel_order(const std::string&, std::string)");
+                                                                 "gaincapital::GCClient::cancel_order(const std::string&, std::string)");
     }
     else
     {

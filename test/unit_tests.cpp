@@ -109,7 +109,8 @@ TEST(GainCapitalUnit, Authentication_API_Call_FailEarly)
     if (! network_response)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(network_response.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::authenticate_session()");
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::authenticate_session()");
     }
     else
     {
