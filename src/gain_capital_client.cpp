@@ -37,7 +37,10 @@ GCClient::GCClient(std::string const& username, std::string const& password, std
 
 std::expected<bool, GCException> GCClient::authenticate_session()
 {
-    /* * The first authentication of the user. This method MUST run before any other API request. */
+    /*
+     * The first authentication of the user.
+     * This method MUST run before any other API request.
+     */
     auto validation_response = validate_auth_payload();
     if (! validation_response)
     {
@@ -47,14 +50,14 @@ std::expected<bool, GCException> GCClient::authenticate_session()
     cpr::Header const headers {{"Content-Type", "application/json"}};
     cpr::Url const url {rest_url_v2 + "/Session"};
     // -------------------
-    auto resp = make_network_call(headers, url, auth_payload.dump(), "POST");
+    auto const network_response = make_network_call(headers, url, auth_payload.dump(), "POST");
 
-    if (! resp)
+    if (! network_response)
     {
-        return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())};
+        return std::expected<bool, GCException> {std::unexpect, std::move(network_response.error())};
     }
 
-    nlohmann::json json = resp.value();
+    nlohmann::json json = network_response.value();
 
     if (! json["statusCode"].is_number_integer() || json["statusCode"] != 0)
     {
@@ -64,10 +67,13 @@ std::expected<bool, GCException> GCClient::authenticate_session()
     // -------------------
     session_header = {{"Content-Type", "application/json"}, {"UserName", auth_payload["UserName"]}, {"Session", json["session"].dump()}};
 
-    auto trading_account_resp = set_trading_account_id();
-    if (! trading_account_resp)
+    if (! validate_account_ids())
     {
-        return trading_account_resp;
+        auto const trading_account_resp = set_trading_account_id();
+        if (! trading_account_resp)
+        {
+            return trading_account_resp;
+        }
     }
     // -------------------
     return std::expected<bool, GCException> {true};
@@ -75,17 +81,19 @@ std::expected<bool, GCException> GCClient::authenticate_session()
 
 std::expected<bool, GCException> GCClient::set_trading_account_id()
 {
-    /* * Sets the member variables CLASS_trading_account_id & CLASS_client_account_id. */
+    /*
+     * Sets the member variables CLASS_trading_account_id & CLASS_client_account_id.
+     */
     cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
     // -------------------
-    auto resp = make_network_call(session_header, url, "", "GET");
+    auto network_response = make_network_call(session_header, url, "", "GET");
 
-    if (! resp)
+    if (! network_response)
     {
-        return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())};
+        return std::expected<bool, GCException> {std::unexpect, std::move(network_response.error())};
     }
 
-    nlohmann::json json = resp.value();
+    nlohmann::json json = network_response.value();
 
     CLASS_trading_account_id = json["tradingAccounts"][0]["tradingAccountId"].dump();
     CLASS_client_account_id = json["tradingAccounts"][0]["clientAccountId"].dump();
@@ -95,13 +103,14 @@ std::expected<bool, GCException> GCClient::set_trading_account_id()
         return std::expected<bool, GCException> {std::unexpect, std::source_location::current().function_name(),
                                                  "JSON Key Error - Response: " + json.dump()};
     }
-    // -------------------
     return std::expected<bool, GCException> {true};
 }
 
 std::expected<bool, GCException> GCClient::validate_session()
 {
-    /* * Validates current session and updates if token expired. */
+    /*
+     * Validates current session and updates if token expired.
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -114,14 +123,14 @@ std::expected<bool, GCException> GCClient::validate_session()
                               {"TradingAccountId", CLASS_trading_account_id}};
     cpr::Url const url {rest_url_v2 + "/Session/validate"};
 
-    auto resp = make_network_call(session_header, url, payload.dump(), "POST");
+    auto network_response = make_network_call(session_header, url, payload.dump(), "POST");
 
-    if (! resp)
+    if (! network_response)
     {
-        return std::expected<bool, GCException> {std::unexpect, std::move(resp.error())};
+        return std::expected<bool, GCException> {std::unexpect, std::move(network_response.error())};
     }
 
-    nlohmann::json json = resp.value();
+    nlohmann::json json = network_response.value();
 
     if (json["isAuthenticated"].dump() != "true")
     {
@@ -131,7 +140,6 @@ std::expected<bool, GCException> GCClient::validate_session()
             return authentication_response;
         }
     }
-    // -------------------
     return std::expected<bool, GCException> {true};
 }
 
@@ -140,9 +148,10 @@ std::expected<bool, GCException> GCClient::validate_session()
 // =================================================================================================================
 std::expected<nlohmann::json, GCException> GCClient::get_account_info()
 {
-    /* Gets the trading account's general information.
-       :return: trading account information
-    */
+    /*
+     * Gets the trading account's general information.
+     * :return: trading account information
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -156,9 +165,10 @@ std::expected<nlohmann::json, GCException> GCClient::get_account_info()
 
 std::expected<nlohmann::json, GCException> GCClient::get_margin_info()
 {
-    /*  Gets the trading account's margin information.
-        :return: trading account margin information
-    */
+    /*
+     * Gets the trading account's margin information.
+     * :return: trading account margin information
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -172,10 +182,11 @@ std::expected<nlohmann::json, GCException> GCClient::get_margin_info()
 
 std::expected<nlohmann::json, GCException> GCClient::get_market_id(std::string const& market_name)
 {
-    /* Gets the market information.
-       :market_name: market name (e.g. USD/CAD)
-       :return: market information
-    */
+    /*
+     * Gets the market information.
+     * :market_name: market name (e.g. USD/CAD)
+     * :return: market information
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -184,14 +195,14 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_id(std::string c
     // -------------------
     cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
 
-    auto resp = make_network_call(session_header, url, "", "GET");
+    auto network_response = make_network_call(session_header, url, "", "GET");
 
-    if (! resp)
+    if (! network_response)
     {
-        return resp;
+        return network_response;
     }
 
-    nlohmann::json json = resp.value();
+    nlohmann::json json = network_response.value();
 
     std::string const market_id = json["Markets"][0]["MarketId"].dump();
 
@@ -225,12 +236,13 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_info(std::string
 std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string const& market_name, std::size_t const num_ticks,
                                                                 std::size_t const from_ts, std::size_t const to_ts, std::string price_type)
 {
-    /*  Get prices
-        :param market_name: market name (e.g. USD/CAD)
-        :param num_ticks: number of price ticks/data to retrieve
-        :param from_ts: from timestamp UTC
-        :param to_ts: to timestamp UTC
-        :return: price data
+    /*  
+    * Get prices
+       * :param market_name: market name (e.g. USD/CAD)
+       * :param num_ticks: number of price ticks/data to retrieve
+       * :param from_ts: from timestamp UTC
+       * :param to_ts: to timestamp UTC
+       * :return: price data
   */
     auto validation_response = validate_session_header();
     if (! validation_response)
@@ -292,14 +304,15 @@ std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string cons
 std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const& market_name, std::string interval, std::size_t const num_ticks,
                                                               std::size_t span, std::size_t const from_ts, std::size_t const to_ts)
 {
-    /*  Get the open, high, low, close of a specific market_id
-        :param market_name: market name (e.g. USD/CAD)
-        :param num_ticks: number of price ticks/data to retrieve
-        :param interval: MINUTE, HOUR or DAY tick interval
-        :param span: it can be a combination of span with interval, 1Hour, 15 MINUTE
-        :param from_ts: from timestamp UTC :param to_ts: to timestamp UTC
-        :return: ohlc dataframe
-    */
+    /*
+     * Get the open, high, low, close of a specific market_id
+     * :param market_name: market name (e.g. USD/CAD)
+     * :param num_ticks: number of price ticks/data to retrieve
+     * :param interval: MINUTE, HOUR or DAY tick interval
+     * :param span: it can be a combination of span with interval, 1Hour, 15 MINUTE
+     * :param from_ts: from timestamp UTC :param to_ts: to timestamp UTC
+     * :return: ohlc dataframe 
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -386,25 +399,28 @@ std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const&
 
 std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json& trade_map, std::string type, std::string tr_account_id)
 {
-    /*  Makes a new trade order
-        :param trade_map: JSON object formatted as shown in the example below
-        :param type: Limit or Market order type
-        :param trading_acc_id: trading account ID
-        :return: error_list: list of symbol names that failed to be executed
-        // Market Order
-        TRADE_MAP = {{"MARKET_NAME",{
-            {"Direction","buy/sell"},
-            {"Quantity","1000"}}
-            }}
-        // Limit Order
-        TRADE_MAP = {{"MARKET_NAME",{
-            {"Direction","buy/sell"},
-            {"Quantity","1000"},
-            {"TriggerPrice","1.3245"},
-            {'StopPrice", "1.3010 or 0 for None"},
-            {'LimitPrice", "1.3521 or 0 for None"}}
-            }}
-    */
+    /*
+     * Makes a new trade order
+     * :param trade_map: JSON object formatted as shown in the example below
+     * :param type: Limit or Market order type
+     * :param trading_acc_id: trading account ID
+     * :return: JSON response or error message
+     *
+     * // Market Order
+     * TRADE_MAP = {{"MARKET_NAME",{
+     *     {"Direction","buy/sell"},
+     *     {"Quantity","1000"}}
+     *     }}
+     *
+     * // Limit Order
+     * TRADE_MAP = {{"MARKET_NAME",{
+     *     {"Direction","buy/sell"},
+     *     {"Quantity","1000"},
+     *     {"TriggerPrice","1.3245"},
+     *     {'StopPrice", "1.3010 or 0 for None"},
+     *     {'LimitPrice", "1.3521 or 0 for None"}}
+     *     }}
+     */
     auto validation_response = validate_session_header();
     if (! validation_response)
     {
@@ -491,6 +507,7 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     {
         auto bid_response = get_prices(market_name, 1, 0, 0, "BID");
         auto offer_response = get_prices(market_name, 1, 0, 0, "ASK");
+
         if (! bid_response || ! offer_response)
         {
             return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
@@ -536,18 +553,18 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
         // -------------------
         cpr::Url const url = (type == "MARKET") ? cpr::Url {rest_url + "/order/newtradeorder"} : cpr::Url {rest_url + "/order/newstoplimitorder"};
 
-        auto resp = make_network_call(session_header, url, trade_payload.dump(), "POST");
+        auto network_response = make_network_call(session_header, url, trade_payload.dump(), "POST");
 
-        if (! resp)
+        if (! network_response)
         {
-            return resp;
+            return network_response;
         }
 
-        nlohmann::json json = resp.value();
+        nlohmann::json json = network_response.value();
 
         if (json.contains("OrderId") && json["OrderId"].is_number_integer() || json["OrderId"] != 0)
         {
-            return resp;
+            return network_response;
         }
         // -----------------------
         // Pause Before Retry
@@ -562,10 +579,11 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
 
 std::expected<nlohmann::json, GCException> GCClient::list_open_positions(std::string tr_account_id)
 {
-    /* List of Open Positions in the trading account.
-       :param trading_acc_id: trading account ID
-       :return JSON response
-    */
+    /*
+     * List of Open Positions in the trading account.
+     * :param trading_acc_id: trading account ID
+     * :return JSON response
+     */
     auto validate_response = validate_session();
     if (! validate_response)
     {
@@ -584,10 +602,11 @@ std::expected<nlohmann::json, GCException> GCClient::list_open_positions(std::st
 
 std::expected<nlohmann::json, GCException> GCClient::list_active_orders(std::string tr_account_id)
 {
-    /* List of Active Order in the trading account.
-       :param trading_acc_id: trading account ID
-       :return JSON response
-    */
+    /*
+     * List of Active Order in the trading account.
+     * :param trading_acc_id: trading account ID
+     * :return JSON response
+     */
     auto validate_response = validate_session();
     if (! validate_response)
     {
@@ -607,11 +626,12 @@ std::expected<nlohmann::json, GCException> GCClient::list_active_orders(std::str
 
 std::expected<nlohmann::json, GCException> GCClient::cancel_order(std::string const& order_id, std::string tr_account_id)
 {
-    /* Cancels an Active Order
-       :order_id: Order ID of the Order to Cancel
-       :param trading_acc_id: trading account ID
-       :return JSON response
-    */
+    /*
+     * Cancels an Active Order
+     * :order_id: Order ID of the Order to Cancel
+     * :param trading_acc_id: trading account ID
+     * :return JSON response
+     */
     auto validate_response = validate_session();
     if (! validate_response)
     {

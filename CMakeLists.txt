@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 project(
   gain_capital_api
-  VERSION 2.0.2
+  VERSION 2.0.3
   DESCRIPTION "Unofficial C++ API for Gain Capital's Forex.com.")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(GNUInstallDirs)
 
@@ -46,9 +47,8 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release")
   add_compile_options(-NDDEBUG)
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    myproject_enable_clang_tidy(${PROJECT_NAME} FALSE)
-  endif()
+  # if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  # myproject_enable_clang_tidy(${PROJECT_NAME} "")
   #myproject_enable_include_what_you_use()
   #myproject_enable_cppcheck(FALSE "X")
   gcc_analyzer_enable()

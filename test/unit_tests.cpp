@@ -8,32 +8,33 @@
 #include "gain_capital_client.h"
 #include "gain_capital_exception.h"
 
-namespace {
+namespace
+{
 
 namespace GC = gaincapital;
 
 std::string URL = "http://localhost:9200";
 
-
-TEST(GainCapitalUnit, Default_Constructor) {
+TEST(GainCapitalUnit, Default_Constructor)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
-    
+
     EXPECT_EQ(gc.CLASS_trading_account_id, "");
     EXPECT_EQ(gc.CLASS_client_account_id, "");
     EXPECT_EQ(gc.market_id_map, (std::unordered_map<std::string, std::string>()));
 }
 
-
-TEST(GainCapitalUnit, Payload_Set_Correctly) {
+TEST(GainCapitalUnit, Payload_Set_Correctly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.validate_auth_payload();
+    auto network_response = gc.validate_auth_payload();
 
-    if (resp) 
+    if (network_response)
     {
-        EXPECT_EQ(resp.value(), true);
+        EXPECT_EQ(network_response.value(), true);
     }
     else
     {
@@ -41,17 +42,18 @@ TEST(GainCapitalUnit, Payload_Set_Correctly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Payload_Set_InCorrectly) {
-    GC::GCClient gc{};
+TEST(GainCapitalUnit, Payload_Set_InCorrectly)
+{
+    GC::GCClient gc {};
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.validate_auth_payload();
-    
-    if (! resp) 
+    auto network_response = gc.validate_auth_payload();
+
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_auth_payload() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_auth_payload() const");
     }
     else
     {
@@ -59,36 +61,37 @@ TEST(GainCapitalUnit, Payload_Set_InCorrectly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Account_IDs_Set_InCorrectly) {
+TEST(GainCapitalUnit, Account_IDs_Set_InCorrectly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
-    
+
     EXPECT_EQ(gc.validate_account_ids(), false);
 }
 
-
-TEST(GainCapitalUnit, Account_IDs_Set_Correctly) {
+TEST(GainCapitalUnit, Account_IDs_Set_Correctly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
-    
+
     gc.CLASS_trading_account_id = "TEST";
     gc.CLASS_client_account_id = "TEST";
 
     EXPECT_EQ(gc.validate_account_ids(), true);
 }
 
-
-TEST(GainCapitalUnit, Session_Header_Set_InCorrectly) {
+TEST(GainCapitalUnit, Session_Header_Set_InCorrectly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.validate_session_header();
-    
-    if (! resp) 
+    auto network_response = gc.validate_session_header();
+
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -96,17 +99,17 @@ TEST(GainCapitalUnit, Session_Header_Set_InCorrectly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Authentication_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Authentication_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.authenticate_session();
+    auto network_response = gc.authenticate_session();
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::authenticate_session()");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::authenticate_session()");
     }
     else
     {
@@ -114,17 +117,18 @@ TEST(GainCapitalUnit, Authentication_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Validate_Session_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Validate_Session_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.validate_session();
+    auto network_response = gc.validate_session();
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -132,17 +136,18 @@ TEST(GainCapitalUnit, Validate_Session_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Account_Info_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Account_Info_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.get_account_info();
+    auto network_response = gc.get_account_info();
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -150,17 +155,18 @@ TEST(GainCapitalUnit, Account_Info_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Margin_Info_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Margin_Info_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.get_margin_info();
+    auto network_response = gc.get_margin_info();
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -168,17 +174,18 @@ TEST(GainCapitalUnit, Margin_Info_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Market_IDs_APIC_all_FailEarly) {
+TEST(GainCapitalUnit, Market_IDs_APIC_all_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.get_market_id("USD/CAD");
+    auto network_response = gc.get_market_id("USD/CAD");
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -186,17 +193,18 @@ TEST(GainCapitalUnit, Market_IDs_APIC_all_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Market_Info_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Market_Info_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.get_market_info("USD/CAD");
+    auto network_response = gc.get_market_info("USD/CAD");
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -204,17 +212,18 @@ TEST(GainCapitalUnit, Market_Info_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Get_Prices_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Get_Prices_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.get_prices("USD/CAD");
+    auto network_response = gc.get_prices("USD/CAD");
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -222,17 +231,18 @@ TEST(GainCapitalUnit, Get_Prices_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, OHLC_API_Call_FailEarly) {
+TEST(GainCapitalUnit, OHLC_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.get_ohlc("USD/CAD", "MINUTE", 1);
+    auto network_response = gc.get_ohlc("USD/CAD", "MINUTE", 1);
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -240,8 +250,8 @@ TEST(GainCapitalUnit, OHLC_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Trade_Order_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Trade_Order_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
@@ -249,12 +259,13 @@ TEST(GainCapitalUnit, Trade_Order_API_Call_FailEarly) {
 
     trades_map_limit["USD/CAD"] = {{"Direction", "buy"}, {"Quantity", 1000}, {"TriggerPrice", 1.0}, {"StopPrice", 1.2}};
 
-    auto resp = gc.trade_order(trades_map_limit, "LIMIT");
+    auto network_response = gc.trade_order(trades_map_limit, "LIMIT");
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -262,17 +273,18 @@ TEST(GainCapitalUnit, Trade_Order_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, List_Open_Positions_API_Call_FailEarly) {
+TEST(GainCapitalUnit, List_Open_Positions_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.list_open_positions();
+    auto network_response = gc.list_open_positions();
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -280,17 +292,18 @@ TEST(GainCapitalUnit, List_Open_Positions_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, List_Active_Orders_API_Call_FailEarly) {
+TEST(GainCapitalUnit, List_Active_Orders_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.list_active_orders();
+    auto network_response = gc.list_active_orders();
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -298,17 +311,18 @@ TEST(GainCapitalUnit, List_Active_Orders_API_Call_FailEarly) {
     }
 }
 
-
-TEST(GainCapitalUnit, Cancel_Order_API_Call_FailEarly) {
+TEST(GainCapitalUnit, Cancel_Order_API_Call_FailEarly)
+{
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
     gc.set_testing_rest_urls(URL);
 
-    auto resp = gc.cancel_order("123");
+    auto network_response = gc.cancel_order("123");
 
-    if (! resp) 
+    if (! network_response)
     {
-        EXPECT_EQ(typeid(resp.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(resp.error().where()), "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
+        EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
+        EXPECT_EQ(std::string(network_response.error().where()),
+                  "std::expected<bool, gaincapital::GCException> gaincapital::GCClient::validate_session_header() const");
     }
     else
     {
@@ -316,5 +330,4 @@ TEST(GainCapitalUnit, Cancel_Order_API_Call_FailEarly) {
     }
 }
 
-
-} // namespace
+}// namespace

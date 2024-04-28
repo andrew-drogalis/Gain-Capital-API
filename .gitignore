@@ -1,6 +1,8 @@
 # Vscode Extensions
 .vscode/
 .trunk/
+.cache/
+.clangd
 
 build/
 
