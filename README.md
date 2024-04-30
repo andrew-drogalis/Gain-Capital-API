@@ -29,8 +29,6 @@ A prerequisite for using this library is having an account with Gain Capital's F
 
 Please see a link to all the required dependencies [below](#Dependencies). If you are using Linux, the dependencies can be installed with the following commands. 
 
-This repository contains a .devcontainer directory. The .devcontainer has all the required dependencies and can be run inside Docker with the Dev Containers VSCode extension.
-
 ```
 Fedora:
     dnf install libmicrohttpd-devel
@@ -278,6 +276,9 @@ To build and install the shared library, run the commands below.
 
 ## Dependencies
 
+
+This repository contains a .devcontainer directory. The .devcontainer has all the required dependencies and can be run inside Docker with the Dev Containers VSCode extension.
+
 #### Included In Repository
 
 - [C++ Requests Library](https://github.com/libcpr/cpr) 
@@ -286,6 +287,7 @@ To build and install the shared library, run the commands below.
 
 #### User Install Required
 
+- [Google Tests](https://github.com/google/googletest) | Testing Only
 - [libmicrohttpd](https://www.gnu.org/software/libmicrohttpd/) | Testing Only
 
 ## Lightstreamer
