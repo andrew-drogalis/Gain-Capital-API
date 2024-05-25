@@ -5,8 +5,8 @@
 
 #include <algorithm>       // for transform
 #include <array>           // for array
+#include <cctype>          // for toupper
 #include <chrono>          // for system_clock
-#include <ctype.h>         // for toupper
 #include <expected>        // for expected
 #include <initializer_list>// for initialize...
 #include <iostream>        // for operator<<
@@ -96,7 +96,7 @@ std::expected<bool, GCException> GCClient::set_trading_account_id()
     nlohmann::json json = network_response.value();
 
     CLASS_trading_account_id = json["tradingAccounts"][0]["tradingAccountId"].dump();
-    CLASS_client_account_id = json["tradingAccounts"][0]["clientAccountId"].dump();
+    CLASS_client_account_id  = json["tradingAccounts"][0]["clientAccountId"].dump();
 
     if (CLASS_trading_account_id == "null" || CLASS_client_account_id == "null")
     {
@@ -259,8 +259,8 @@ std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string cons
                                                            "Price Type Error - Provide one of the following price types: 'ASK', 'BID', 'MID'"};
     }
     // -------------------
-    std::string market_id = "";
-    if (market_id_map.count(market_name))
+    std::string market_id {};
+    if (market_id_map.contains(market_name))
     {
         market_id = market_id_map[market_name];
     }
@@ -322,8 +322,8 @@ std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const&
     // -------------------
     std::transform(interval.begin(), interval.end(), interval.begin(), ::toupper);
 
-    std::array<int, 7> const SPAN_M = {1, 2, 3, 5, 10, 15, 30};// Span intervals for minutes
-    std::array<int, 4> const SPAN_H = {1, 2, 4, 8};            // Span intervals for hours
+    std::array<int, 7> const SPAN_M           = {1, 2, 3, 5, 10, 15, 30};// Span intervals for minutes
+    std::array<int, 4> const SPAN_H           = {1, 2, 4, 8};            // Span intervals for hours
     std::array<std::string, 5> const INTERVAL = {"HOUR", "MINUTE", "DAY", "WEEK", "MONTH"};
 
     if (std::find(INTERVAL.begin(), INTERVAL.end(), interval) == INTERVAL.end())
@@ -355,7 +355,7 @@ std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const&
     }
     // -------------------
     std::string market_id;
-    if (market_id_map.count(market_name))
+    if (market_id_map.contains(market_name))
     {
         market_id = market_id_map[market_name];
     }
@@ -443,7 +443,7 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     // -------------------
     std::string const market_name = trade_map.begin().key();
     std::string market_id;
-    if (market_id_map.count(market_name))
+    if (market_id_map.contains(market_name))
     {
         market_id = market_id_map[market_name];
     }
@@ -502,11 +502,11 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     // -------------------
     std::size_t current_time = (std::chrono::system_clock::now().time_since_epoch()).count() * std::chrono::system_clock::period::num /
                                std::chrono::system_clock::period::den;
-    int const RETRY_SECONDS = 5;
+    int const RETRY_SECONDS     = 5;
     std::size_t const stop_time = current_time + RETRY_SECONDS;
     while (current_time <= stop_time)
     {
-        auto bid_response = get_prices(market_name, 1, 0, 0, "BID");
+        auto bid_response   = get_prices(market_name, 1, 0, 0, "BID");
         auto offer_response = get_prices(market_name, 1, 0, 0, "ASK");
 
         if (! bid_response || ! offer_response)
@@ -514,14 +514,15 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
             return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
                                                                "Failure Fetching Prices"};
         }
-        nlohmann::json bid_json = bid_response.value();
+        nlohmann::json bid_json   = bid_response.value();
         nlohmann::json offer_json = offer_response.value();
 
-        std::string bid_price, offer_price;
+        std::string bid_price {};
+        std::string offer_price {};
 
         if (bid_json["PriceTicks"][0]["Price"].dump() != "null" && offer_json["PriceTicks"][0]["Price"].dump() != "null")
         {
-            bid_price = bid_json["PriceTicks"][0]["Price"].dump();
+            bid_price   = bid_json["PriceTicks"][0]["Price"].dump();
             offer_price = offer_json["PriceTicks"][0]["Price"].dump();
         }
         else
@@ -657,22 +658,23 @@ std::expected<nlohmann::json, GCException> GCClient::cancel_order(std::string co
 std::expected<nlohmann::json, GCException> GCClient::make_network_call(cpr::Header const& header, cpr::Url const& url, std::string const& payload,
                                                                        std::string const& type, std::source_location const& location)
 {
-    cpr::Response r;
+    int OK = 200;
+    cpr::Response resp;
     if (type == "POST")
     {
-        r = cpr::Post(url, header, cpr::Body {payload});
+        resp = cpr::Post(url, header, cpr::Body {payload});
     }
     else if (type == "GET")
     {
-        r = cpr::Get(url, header);
+        resp = cpr::Get(url, header);
     }
     // -------------------
-    if (r.status_code == 200)
+    if (resp.status_code == OK)
     {
         nlohmann::json response;
         try
         {
-            response = nlohmann::json::parse(r.text);
+            response = nlohmann::json::parse(resp.text);
         }
         catch (nlohmann::json::exception const& e)
         {
@@ -681,15 +683,15 @@ std::expected<nlohmann::json, GCException> GCClient::make_network_call(cpr::Head
         // -------------------
         return std::expected<nlohmann::json, GCException> {response};
     }
-    else if (! r.status_code)
+    else if (! resp.status_code)
     {
         return std::expected<bool, GCException> {std::unexpect, location.function_name(),
-                                                 " Error - Status Code: " + std::to_string(r.status_code) + "; Message: No Internet Connection"};
+                                                 " Error - Status Code: " + std::to_string(resp.status_code) + "; Message: No Internet Connection"};
     }
     else
     {
         return std::expected<bool, GCException> {std::unexpect, location.function_name(),
-                                                 " Error - Status Code: " + std::to_string(r.status_code) + "; Message: " + r.text};
+                                                 " Error - Status Code: " + std::to_string(resp.status_code) + "; Message: " + resp.text};
     }
 }
 
@@ -715,7 +717,7 @@ std::expected<bool, GCException> GCClient::validate_auth_payload() const
 
 bool GCClient::validate_account_ids() const noexcept
 {
-    if (CLASS_trading_account_id == "" || CLASS_client_account_id == "")
+    if (CLASS_trading_account_id.empty() || CLASS_client_account_id.empty())
     {
         return false;
     }
