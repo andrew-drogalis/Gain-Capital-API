@@ -9,8 +9,8 @@
 namespace gaincapital
 {
 
-GCException::GCException(std::string const& func_name, std::string const& message)
-    : std::runtime_error {message}, func_name(func_name), message(message)
+GCException::GCException(std::string func_name, std::string const& message)
+    : std::runtime_error {message}, func_name(std::move(func_name)), message(message)
 {
 }
 

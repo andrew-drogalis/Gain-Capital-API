@@ -18,11 +18,11 @@ class GCException : public std::runtime_error
 
     GCException() = delete;
 
-    GCException(std::string const& func_name, std::string const& message);
+    GCException(std::string func_name, std::string const& message);
 
-    char const* what() const noexcept override;
+    [[nodiscard]] char const* what() const noexcept override;
 
-    char const* where() const noexcept;
+    [[nodiscard]] char const* where() const noexcept;
 };
 
 }// namespace gaincapital
