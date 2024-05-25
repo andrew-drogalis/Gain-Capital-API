@@ -11,7 +11,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(GNUInstallDirs)
 
-add_library(${PROJECT_NAME} SHARED src/gain_capital_client.cpp src/gain_capital_exception.cpp)
+add_library(${PROJECT_NAME} SHARED src/gain_capital_client.cpp
+                                   src/gain_capital_exception.cpp)
 
 set_target_properties(
   ${PROJECT_NAME}
@@ -19,8 +20,8 @@ set_target_properties(
              SOVERSION ${PROJECT_VERSION_MAJOR}
              PUBLIC_HEADER include/${PROJECT_NAME}.h)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
+target_include_directories(${PROJECT_NAME}
+                           PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # ------------------------------
 # Build Configuration
 include(cmake/CompilerWarnings.cmake)
@@ -44,16 +45,14 @@ add_clang_format_target(RUN_CLANG-FORMAT ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_compile_options(-pipe -fPIC)
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  add_compile_options(-NDDEBUG)
+    add_compile_options(-NDDEBUG)
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  # if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-  # myproject_enable_clang_tidy(${PROJECT_NAME} "")
-  #myproject_enable_include_what_you_use()
-  #myproject_enable_cppcheck(FALSE "X")
-  gcc_analyzer_enable()
-  myproject_enable_coverage(${PROJECT_NAME})
-  myproject_enable_sanitizers(
+    #myproject_enable_include_what_you_use()
+    #myproject_enable_cppcheck(FALSE "X")
+    gcc_analyzer_enable()
+    myproject_enable_coverage(${PROJECT_NAME})
+    myproject_enable_sanitizers(
     ${PROJECT_NAME}
     TRUE
     TRUE
@@ -89,7 +88,8 @@ add_subdirectory(test)
 # ===================================================================
 # Build Example Executable
 # ===================================================================
-add_executable(Example examples/example.cpp src/gain_capital_client.cpp src/gain_capital_exception.cpp)
+add_executable(Example examples/example.cpp src/gain_capital_client.cpp
+                       src/gain_capital_exception.cpp)
 
 target_include_directories(Example PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

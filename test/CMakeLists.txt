@@ -51,7 +51,9 @@ cmake_path(
   PARENT_DIR)
 
 # Add a testing executable
-add_executable(unit_tests unit_tests.cpp ${PARENT_DIR}/src/gain_capital_client.cpp ${PARENT_DIR}/src/gain_capital_exception.cpp)
+add_executable(
+  unit_tests unit_test.cpp ${PARENT_DIR}/src/gain_capital_client.cpp
+             ${PARENT_DIR}/src/gain_capital_exception.cpp)
 
 target_include_directories(unit_tests PRIVATE ${PARENT_DIR}/include)
 
@@ -65,11 +67,15 @@ target_link_libraries(
 
 # Add a testing executable
 add_executable(
-  functional_tests_production_scenario functional_tests_correct_server.cpp ${PARENT_DIR}/src/gain_capital_client.cpp ${PARENT_DIR}/src/gain_capital_exception.cpp)
+  functional_tests_production_scenario
+  functional_correct_server_test.cpp ${PARENT_DIR}/src/gain_capital_client.cpp
+  ${PARENT_DIR}/src/gain_capital_exception.cpp)
 
-target_include_directories(functional_tests_production_scenario PRIVATE ${PARENT_DIR}/include)
+target_include_directories(functional_tests_production_scenario
+                           PRIVATE ${PARENT_DIR}/include)
 
-target_link_libraries(functional_tests_production_scenario PRIVATE cpr::cpr ${PARENT_DIR}/lib/libhttpmockserver.a)
+target_link_libraries(functional_tests_production_scenario
+                      PRIVATE cpr::cpr ${PARENT_DIR}/lib/libhttpmockserver.a)
 
 target_link_libraries(
   functional_tests_production_scenario
@@ -81,11 +87,15 @@ target_link_libraries(
 
 # Add a testing executable
 add_executable(
-  functional_tests_failure_scenario functional_tests_failed_server.cpp ${PARENT_DIR}/src/gain_capital_client.cpp ${PARENT_DIR}/src/gain_capital_exception.cpp)
+  functional_tests_failure_scenario
+  functional_failed_server_test.cpp ${PARENT_DIR}/src/gain_capital_client.cpp
+  ${PARENT_DIR}/src/gain_capital_exception.cpp)
 
-target_include_directories(functional_tests_failure_scenario PRIVATE ${PARENT_DIR}/include)
+target_include_directories(functional_tests_failure_scenario
+                           PRIVATE ${PARENT_DIR}/include)
 
-target_link_libraries(functional_tests_failure_scenario PRIVATE cpr::cpr ${PARENT_DIR}/lib/libhttpmockserver.a)
+target_link_libraries(functional_tests_failure_scenario
+                      PRIVATE cpr::cpr ${PARENT_DIR}/lib/libhttpmockserver.a)
 
 target_link_libraries(
   functional_tests_failure_scenario
@@ -98,7 +108,7 @@ target_link_libraries(
 # we cannot analyse results without gcov
 find_program(GCOV_PATH gcov)
 if(NOT GCOV_PATH)
-  message(FATAL_ERROR "Code coverage analysis requires gcov!")
+    message(FATAL_ERROR "Code coverage analysis requires gcov!")
 endif()
 
 include(GoogleTest)

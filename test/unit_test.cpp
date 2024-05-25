@@ -13,7 +13,7 @@ namespace
 
 namespace GC = gaincapital;
 
-std::string URL = "http://localhost:9200";
+std::string const URL = "http://localhost:9200";
 
 TEST(GainCapitalUnit, Default_Constructor)
 {
@@ -75,7 +75,7 @@ TEST(GainCapitalUnit, Account_IDs_Set_Correctly)
     gc.set_testing_rest_urls(URL);
 
     gc.CLASS_trading_account_id = "TEST";
-    gc.CLASS_client_account_id = "TEST";
+    gc.CLASS_client_account_id  = "TEST";
 
     EXPECT_EQ(gc.validate_account_ids(), true);
 }

@@ -17,7 +17,7 @@ namespace
 
 namespace GC = gaincapital;
 
-std::string URL = "http://localhost:9200";
+std::string const URL = "http://localhost:9200";
 
 class HTTPMock : public httpmock::MockServer
 {
@@ -28,7 +28,7 @@ class HTTPMock : public httpmock::MockServer
   private:
     /// Handler called by MockServer on HTTP request.
     Response responseHandler(std::string const& url, std::string const& method, std::string const& data, std::vector<UrlArg> const& urlArguments,
-                             std::vector<Header> const& headers)
+                             std::vector<Header> const& headers) override
     {
         // Authenticate Session
         if (method == "POST" && matchesPrefix(url, "/Session") && matchesAuth(url))
@@ -77,7 +77,7 @@ class HTTPMock : public httpmock::MockServer
         {
             return Response(200, "{\"OrderId\": 0}");
         }
-        // List Open Positons
+        // List Open Positions
         else if (method == "GET" && matchesOpenPositions(url, "/order/openpositions"))
         {
             return Response(400, "{\"OpenPositions\": \"123\"}");
