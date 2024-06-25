@@ -10,8 +10,8 @@ readability-*,
 portability-*
 clang-analyzer-*,
 -modernize-use-trailing-return-type,
+-misc-non-private-member-variables-in-classes,
 '
 
 WarningsAsErrors: false
 
-HeaderFilterRegex: '^((?/include/gain_capital_client.h|/include/gain_capital_exception.h).)*$'
