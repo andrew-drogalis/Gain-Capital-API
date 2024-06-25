@@ -81,11 +81,11 @@ class GCClient
     // UTILITIES
     // =================================================================================================================
 
+    [[nodiscard]] std::expected<std::string, GCException> return_market_id(std::string const& market_name);
+
     [[nodiscard]] std::expected<bool, GCException> validate_session_header() const;
 
     [[nodiscard]] std::expected<bool, GCException> validate_auth_payload() const;
-
-    [[nodiscard]] bool validate_account_ids() const noexcept;
 
     void set_testing_rest_urls(std::string const& url);
 

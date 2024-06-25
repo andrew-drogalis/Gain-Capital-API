@@ -46,10 +46,10 @@ std::expected<bool, GCException> GCClient::authenticate_session()
     {
         return validation_response;
     }
-    // -------------------
+
     cpr::Header const headers {{"Content-Type", "application/json"}};
     cpr::Url const url {rest_url_v2 + "/Session"};
-    // -------------------
+
     auto const network_response = make_network_call(headers, url, auth_payload.dump(), "POST");
 
     if (! network_response)
@@ -64,10 +64,10 @@ std::expected<bool, GCException> GCClient::authenticate_session()
         return std::expected<bool, GCException> {std::unexpect, std::source_location::current().function_name(),
                                                  "API Response is Valid, but Gain Capital Status Code Error: " + json["statusCode"].dump()};
     }
-    // -------------------
+
     session_header = {{"Content-Type", "application/json"}, {"UserName", auth_payload["UserName"]}, {"Session", json["session"].dump()}};
 
-    if (! validate_account_ids())
+    if (CLASS_client_account_id.empty() || CLASS_trading_account_id.empty())
     {
         auto const trading_account_resp = set_trading_account_id();
         if (! trading_account_resp)
@@ -85,7 +85,7 @@ std::expected<bool, GCException> GCClient::set_trading_account_id()
      * Sets the member variables CLASS_trading_account_id & CLASS_client_account_id.
      */
     cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
-    // -------------------
+
     auto network_response = make_network_call(session_header, url, "", "GET");
 
     if (! network_response)
@@ -116,7 +116,7 @@ std::expected<bool, GCException> GCClient::validate_session()
     {
         return validation_response;
     }
-    // -------------------
+
     nlohmann::json payload = {{"ClientAccountId", CLASS_client_account_id},
                               {"UserName", session_header["Username"]},
                               {"Session", session_header["Session"]},
@@ -157,7 +157,7 @@ std::expected<nlohmann::json, GCException> GCClient::get_account_info()
     {
         return validation_response;
     }
-    // -------------------
+
     cpr::Url const url {rest_url_v2 + "/userAccount/ClientAndTradingAccount"};
     // -------------------
     return make_network_call(session_header, url, "", "GET");
@@ -174,7 +174,7 @@ std::expected<nlohmann::json, GCException> GCClient::get_margin_info()
     {
         return validation_response;
     }
-    // -------------------
+
     cpr::Url const url {rest_url_v2 + "/margin/clientAccountMargin?clientAccountId=" + CLASS_client_account_id};
     // -------------------
     return make_network_call(session_header, url, "", "GET");
@@ -192,7 +192,7 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_id(std::string c
     {
         return validation_response;
     }
-    // -------------------
+
     cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
 
     auto network_response = make_network_call(session_header, url, "", "GET");
@@ -228,7 +228,7 @@ std::expected<nlohmann::json, GCException> GCClient::get_market_info(std::string
     {
         return validation_response;
     }
-    // -------------------
+
     cpr::Url const url {rest_url + "/cfd/markets?MarketName=" + market_name};
     // -------------------
     return make_network_call(session_header, url, "", "GET");
@@ -259,25 +259,13 @@ std::expected<nlohmann::json, GCException> GCClient::get_prices(std::string cons
                                                            "Price Type Error - Provide one of the following price types: 'ASK', 'BID', 'MID'"};
     }
     // -------------------
-    std::string market_id {};
-    if (market_id_map.contains(market_name))
+    auto market_id_response = return_market_id(market_name);
+    if (! market_id_response)
     {
-        market_id = market_id_map[market_name];
+        return std::expected<nlohmann::json, GCException> {std::unexpect, std::move(market_id_response.error())};
     }
-    else
-    {
-        auto response = get_market_id(market_name);
-        if (market_id_map.contains(market_name))
-        {
-            market_id = market_id_map[market_name];
-        }
-        else
-        {
-            return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
-                                                               "Failure Fetching Market ID"};
-        }
-    }
-    // -------------------
+    std::string market_id = market_id_response.value();
+
     cpr::Url url;
     if (from_ts != 0 && to_ts != 0)
     {
@@ -354,25 +342,13 @@ std::expected<nlohmann::json, GCException> GCClient::get_ohlc(std::string const&
         span = 1;
     }
     // -------------------
-    std::string market_id;
-    if (market_id_map.contains(market_name))
+    auto market_id_response = return_market_id(market_name);
+    if (! market_id_response)
     {
-        market_id = market_id_map[market_name];
+        return std::expected<nlohmann::json, GCException> {std::unexpect, std::move(market_id_response.error())};
     }
-    else
-    {
-        auto response = get_market_id(market_name);
-        if (market_id_map.contains(market_name))
-        {
-            market_id = market_id_map[market_name];
-        }
-        else
-        {
-            return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
-                                                               "Failure Fetching Market ID"};
-        }
-    }
-    // -------------------
+    std::string market_id = market_id_response.value();
+
     cpr::Url url;
     if (from_ts != 0 && to_ts != 0)
     {
@@ -442,25 +418,14 @@ std::expected<nlohmann::json, GCException> GCClient::trade_order(nlohmann::json&
     }
     // -------------------
     std::string const market_name = trade_map.begin().key();
-    std::string market_id;
-    if (market_id_map.contains(market_name))
-    {
-        market_id = market_id_map[market_name];
-    }
-    else
-    {
-        auto response = get_market_id(market_name);
-        if (market_id_map.contains(market_name))
-        {
-            market_id = market_id_map[market_name];
-        }
-        else
-        {
-            return std::expected<nlohmann::json, GCException> {std::unexpect, std::source_location::current().function_name(),
-                                                               "Failure Fetching Market ID"};
-        }
-    }
     // -------------------
+    auto market_id_response = return_market_id(market_name);
+    if (! market_id_response)
+    {
+        return std::expected<nlohmann::json, GCException> {std::unexpect, std::move(market_id_response.error())};
+    }
+    std::string market_id = market_id_response.value();
+
     // Check Trade Map Has Required Fields
     if (trade_map[market_name]["Direction"].dump() == "null")
     {
@@ -695,6 +660,20 @@ std::expected<nlohmann::json, GCException> GCClient::make_network_call(cpr::Head
     }
 }
 
+std::expected<std::string, GCException> GCClient::return_market_id(std::string const& market_name) 
+{
+    if (market_id_map.contains(market_name))
+    {
+        return std::expected<std::string, GCException> {market_id_map[market_name]};
+    }
+    auto response = get_market_id(market_name);
+    if (market_id_map.contains(market_name))
+    {
+        return std::expected<std::string, GCException> {market_id_map[market_name]};
+    }
+    return std::expected<std::string, GCException> {std::unexpect, std::source_location::current().function_name(), "Failure Fetching Market ID"};
+}
+
 std::expected<bool, GCException> GCClient::validate_session_header() const
 {
     if (session_header.empty())
@@ -713,15 +692,6 @@ std::expected<bool, GCException> GCClient::validate_auth_payload() const
                                                  "Failed to pass 'Username', 'Password', and 'APIKey' to constructor"};
     }
     return std::expected<bool, GCException> {true};
-}
-
-bool GCClient::validate_account_ids() const noexcept
-{
-    if (CLASS_trading_account_id.empty() || CLASS_client_account_id.empty())
-    {
-        return false;
-    }
-    return true;
 }
 
 void GCClient::set_testing_rest_urls(std::string const& url) { rest_url = rest_url_v2 = url; }
