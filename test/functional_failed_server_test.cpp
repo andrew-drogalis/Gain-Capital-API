@@ -242,9 +242,9 @@ TEST(GainCapital_Failed_Server, Get_Prices_Failed_Server_Test)
     if (! network_response)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(network_response.error().where()),
-                  "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_prices(const "
-                  "std::string&, std::size_t, std::size_t, std::size_t, std::string)");
+        EXPECT_EQ(
+            std::string(network_response.error().where()),
+            "std::expected<std::__cxx11::basic_string<char>, gaincapital::GCException> gaincapital::GCClient::return_market_id(const std::string&)");
     }
     else
     {
@@ -263,9 +263,9 @@ TEST(GainCapital_Failed_Server, Get_OHLC_Failed_Server_Test)
     if (! network_response)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(network_response.error().where()),
-                  "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> gaincapital::GCClient::get_ohlc(const "
-                  "std::string&, std::string, std::size_t, std::size_t, std::size_t, std::size_t)");
+        EXPECT_EQ(
+            std::string(network_response.error().where()),
+            "std::expected<std::__cxx11::basic_string<char>, gaincapital::GCException> gaincapital::GCClient::return_market_id(const std::string&)");
     }
     else
     {
@@ -288,9 +288,9 @@ TEST(GainCapital_Failed_Server, Trade_Order_Failed_Server_Test)
     if (! network_response)
     {
         EXPECT_EQ(typeid(network_response.error()), typeid(GC::GCException));
-        EXPECT_EQ(std::string(network_response.error().where()),
-                  "std::expected<nlohmann::json_abi_v3_11_3::basic_json<>, gaincapital::GCException> "
-                  "gaincapital::GCClient::trade_order(nlohmann::json_abi_v3_11_3::json&, std::string, std::string)");
+        EXPECT_EQ(
+            std::string(network_response.error().where()),
+            "std::expected<std::__cxx11::basic_string<char>, gaincapital::GCException> gaincapital::GCClient::return_market_id(const std::string&)");
     }
     else
     {

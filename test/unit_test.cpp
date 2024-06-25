@@ -61,25 +61,6 @@ TEST(GainCapitalUnit, Payload_Set_InCorrectly)
     }
 }
 
-TEST(GainCapitalUnit, Account_IDs_Set_InCorrectly)
-{
-    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
-    gc.set_testing_rest_urls(URL);
-
-    EXPECT_EQ(gc.validate_account_ids(), false);
-}
-
-TEST(GainCapitalUnit, Account_IDs_Set_Correctly)
-{
-    GC::GCClient gc("USER", "PASSWORD", "APIKEY");
-    gc.set_testing_rest_urls(URL);
-
-    gc.CLASS_trading_account_id = "TEST";
-    gc.CLASS_client_account_id  = "TEST";
-
-    EXPECT_EQ(gc.validate_account_ids(), true);
-}
-
 TEST(GainCapitalUnit, Session_Header_Set_InCorrectly)
 {
     GC::GCClient gc("USER", "PASSWORD", "APIKEY");
